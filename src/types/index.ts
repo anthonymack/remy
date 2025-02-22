@@ -1,6 +1,7 @@
 export interface Message {
-  type: string;
-  content: string;
+  source: string;
+  message: string;
+  role?: 'assistant' | 'user';
 }
 
 export interface ConversationError {

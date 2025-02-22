@@ -2,8 +2,14 @@
 
 import { useState, useEffect } from 'react';
 import { useConversation } from '@11labs/react';
-import { Recipe, Message } from '@/types';
+import { Recipe } from '@/types';
 import { supabase } from '@/lib/supabase';
+
+interface Message {
+  source: string;
+  message: string;
+  role?: 'assistant' | 'user';
+}
 
 export default function Home() {
   const [recipe, setRecipe] = useState<Recipe | null>(null);
@@ -13,6 +19,7 @@ export default function Home() {
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [recipeUrl, setRecipeUrl] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
+  const [messages, setMessages] = useState<Message[]>([]);
 
   const conversation = useConversation({
     apiKey: process.env.NEXT_PUBLIC_ELEVENLABS_API_KEY!,
@@ -26,6 +33,7 @@ export default function Home() {
     },
     onMessage: (message: Message) => {
       console.log('Received message:', message);
+      setMessages(prevMessages => [...prevMessages, message]);
     },
     onError: (error: Error) => {
       console.error('ElevenLabs error:', error);
@@ -80,6 +88,21 @@ export default function Home() {
     fetchRecipes();
   }, []);
 
+  // Helper function to create dynamic variables
+  const createDynamicVariables = (recipe: Recipe, stepNumber: number) => ({
+    recipe_title: recipe.title,
+    total_time: recipe.total_time,
+    current_step_number: stepNumber + 1,
+    current_step: recipe.recipe_steps[stepNumber].instruction,
+    total_steps: recipe.recipe_steps.length,
+    ingredients_list: recipe.recipe_ingredients
+      .map(ing => `${ing.amount} ${ing.unit} ${ing.ingredient}`)
+      .join('\n'),
+    steps_list: recipe.recipe_steps
+      .map(step => `${step.step_number}. ${step.instruction}`)
+      .join('\n')
+  });
+
   const startConversation = async () => {
     try {
       setStatus('starting');
@@ -87,23 +110,15 @@ export default function Home() {
       
       await navigator.mediaDevices.getUserMedia({ audio: true });
 
-      const dynamicVariables = {
-        recipe_title: recipe?.title,
-        total_time: recipe?.total_time,
-        current_step_number: currentStep + 1,
-        current_step: recipe?.recipe_steps?.[currentStep]?.instruction,
-        total_steps: recipe?.recipe_steps?.length,
-        ingredients_list: recipe?.recipe_ingredients
-          ?.map(ing => `${ing.amount} ${ing.unit} ${ing.ingredient}`)
-          .join('\n'),
-        steps_list: recipe?.recipe_steps
-          ?.map(step => `${step.step_number}. ${step.instruction}`)
-          .join('\n')
-      };
+      if (!recipe) {
+        throw new Error('No recipe selected');
+      }
+
+      const dynamicVariables = createDynamicVariables(recipe, currentStep);
 
       await conversation.startSession({
         agentId: process.env.NEXT_PUBLIC_AGENT_ID!,
-        dynamicVariables: dynamicVariables
+        dynamicVariables
       });
 
     } catch (error) {
@@ -125,47 +140,56 @@ export default function Home() {
     }
   };
 
-  const formatRecipeContext = (recipe: Recipe) => {
-    const ingredients = recipe.recipe_ingredients
-      .map(ing => `${ing.amount} ${ing.unit} ${ing.ingredient}`)
-      .join(', ');
-
-    return `
-      I'm helping someone cook ${recipe.title}. 
-      This recipe takes ${recipe.total_time}.
-      
-      The ingredients needed are: ${ingredients}
-      
-      There are ${recipe.recipe_steps.length} steps in total.
-      The current step (${currentStep + 1}) is: ${recipe.recipe_steps[currentStep]?.instruction}
-      
-      Please help guide the user through this step and be ready to move to the next step when they're done.
-      If they ask about ingredients or previous steps, you can reference those details from what I've provided.
-    `;
-  };
-
   const moveToNextStep = async () => {
     if (!recipe || currentStep >= recipe.recipe_steps.length - 1) return;
     
-    const nextStep = currentStep + 1;
-    setCurrentStep(nextStep);
-    
-    await conversation.startSession({
-      agentId: process.env.NEXT_PUBLIC_AGENT_ID!,
-      context: formatRecipeContext(recipe)
-    });
+    try {
+      // Stop current conversation if it's speaking
+      if (status === 'connected') {
+        await conversation.endSession();
+      }
+      
+      const nextStep = currentStep + 1;
+      setCurrentStep(nextStep);
+      
+      // Clear previous messages for the new step
+      setMessages([]);
+      
+      const dynamicVariables = createDynamicVariables(recipe, nextStep);
+      await conversation.startSession({
+        agentId: process.env.NEXT_PUBLIC_AGENT_ID!,
+        dynamicVariables
+      });
+    } catch (error) {
+      console.error('Error moving to next step:', error);
+      setError(`Failed to move to next step: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
   };
 
   const previousStep = async () => {
     if (!recipe || currentStep <= 0) return;
     
-    const prevStep = currentStep - 1;
-    setCurrentStep(prevStep);
-    
-    await conversation.startSession({
-      agentId: process.env.NEXT_PUBLIC_AGENT_ID!,
-      context: formatRecipeContext(recipe)
-    });
+    try {
+      // Stop current conversation if it's speaking
+      if (status === 'connected') {
+        await conversation.endSession();
+      }
+      
+      const prevStep = currentStep - 1;
+      setCurrentStep(prevStep);
+      
+      // Clear previous messages for the new step
+      setMessages([]);
+      
+      const dynamicVariables = createDynamicVariables(recipe, prevStep);
+      await conversation.startSession({
+        agentId: process.env.NEXT_PUBLIC_AGENT_ID!,
+        dynamicVariables
+      });
+    } catch (error) {
+      console.error('Error moving to previous step:', error);
+      setError(`Failed to move to previous step: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
   };
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -243,11 +267,11 @@ export default function Home() {
   };
 
   return (
-    <main className="min-h-screen p-8 bg-gray-100">
-      <div className="max-w-2xl mx-auto bg-white rounded-lg shadow-lg p-8">
-        <h1 className="text-2xl font-bold mb-6">Cooking Assistant</h1>
+    <main className="min-h-screen p-4 md:p-8 bg-gray-100">
+      <div className="max-w-lg mx-auto bg-white rounded-xl shadow-lg overflow-hidden">
+        <h1 className="text-2xl font-bold mb-6 p-8">Cooking Assistant</h1>
         
-        <form onSubmit={handleUrlSubmit} className="mb-4">
+        <form onSubmit={handleUrlSubmit} className="mb-4 p-8">
           <input
             type="url"
             value={recipeUrl}
@@ -276,7 +300,7 @@ export default function Home() {
         </form>
 
         {/* Recipe Selector */}
-        <div className="mb-6">
+        <div className="p-6 border-b">
           <select 
             className="w-full p-2 border rounded"
             onChange={(e) => {
@@ -296,50 +320,84 @@ export default function Home() {
         </div>
 
         {/* Status Display */}
-        <div className="mb-6 p-4 bg-gray-50 rounded">
-          <p>Status: <span className="font-semibold">{status}</span></p>
+        <div className="p-6 border-b">
+          <div className="flex items-center space-x-2">
+            <div className={`w-2 h-2 rounded-full ${
+              status === 'connected' ? 'bg-green-500' : 
+              status === 'error' ? 'bg-red-500' : 
+              'bg-gray-500'
+            }`}></div>
+            <p className="text-sm font-medium text-gray-600">
+              Status: <span className="font-semibold">{status}</span>
+            </p>
+          </div>
           {error && (
-            <p className="text-red-500 mt-2">{error}</p>
+            <p className="mt-2 text-sm text-red-600">{error}</p>
           )}
         </div>
 
+        {/* Recipe Content */}
         {recipe && (
-          <div className="mb-8">
-            <h2 className="text-2xl font-bold mb-4">{recipe.title}</h2>
+          <div className="p-6 border-b">
+            <h2 className="text-xl font-bold text-gray-900 mb-4">{recipe.title}</h2>
             
-            <div className="bg-gray-50 p-4 rounded-lg mb-4">
-              <h3 className="font-bold mb-2">Current Step ({currentStep + 1} of {recipe.recipe_steps.length})</h3>
-              <p>{recipe.recipe_steps[currentStep]?.instruction}</p>
+            <div className="bg-gray-50 rounded-lg p-4 mb-4">
+              <h3 className="font-medium text-gray-900 mb-2">
+                Step {currentStep + 1} of {recipe.recipe_steps.length}
+              </h3>
+              <p className="text-gray-600">{recipe.recipe_steps[currentStep]?.instruction}</p>
             </div>
 
-            <div className="flex gap-4 mb-6">
+            {/* Chat Messages */}
+            <div className="mt-4 mb-4 border rounded-lg">
+              <div className="h-60 overflow-y-auto p-4 space-y-3">
+                {messages.map((msg, index) => (
+                  <div 
+                    key={index} 
+                    className={`flex ${msg.role === 'assistant' ? 'justify-start' : 'justify-end'}`}
+                  >
+                    <div 
+                      className={`rounded-lg px-4 py-2 max-w-[80%] ${
+                        msg.role === 'assistant'
+                          ? 'bg-blue-100 text-blue-900' 
+                          : 'bg-gray-100 text-gray-900'
+                      }`}
+                    >
+                      <p className="text-sm whitespace-pre-wrap">{msg.message}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="flex space-x-3">
               <button
                 onClick={previousStep}
                 disabled={currentStep === 0}
-                className="px-4 py-2 bg-gray-200 rounded disabled:opacity-50"
+                className="flex-1 p-3 bg-gray-100 rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
-                Previous Step
+                Previous
               </button>
               <button
                 onClick={moveToNextStep}
                 disabled={currentStep === recipe.recipe_steps.length - 1}
-                className="px-4 py-2 bg-blue-500 text-white rounded disabled:opacity-50"
+                className="flex-1 p-3 bg-blue-600 text-white rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
-                Next Step
+                Next
               </button>
             </div>
           </div>
         )}
 
-        {/* Control Buttons */}
-        <div className="flex gap-4">
+        {/* Voice Control */}
+        <div className="p-6">
           <button
             onClick={startConversation}
             disabled={status === 'connected' || status === 'starting'}
-            className={`px-6 py-3 rounded-lg text-white ${
+            className={`w-full p-4 rounded-lg font-medium transition-colors ${
               status === 'connected' || status === 'starting'
-                ? 'bg-gray-400 cursor-not-allowed'
-                : 'bg-blue-600 hover:bg-blue-700'
+                ? 'bg-gray-300 cursor-not-allowed'
+                : 'bg-blue-600 text-white hover:bg-blue-700'
             }`}
           >
             {status === 'starting' ? 'Starting...' : 'Start Cooking Assistant'}
@@ -348,18 +406,11 @@ export default function Home() {
           {status === 'connected' && (
             <button
               onClick={stopConversation}
-              className="px-6 py-3 rounded-lg text-white bg-red-600 hover:bg-red-700"
+              className="mt-3 w-full p-4 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition-colors"
             >
               Stop Assistant
             </button>
           )}
-        </div>
-
-        {/* Debug Info (remove in production) */}
-        <div className="mt-8 p-4 bg-gray-100 rounded text-sm">
-          <p>Debug Info:</p>
-          <p>Agent ID set: {process.env.NEXT_PUBLIC_AGENT_ID ? 'Yes' : 'No'}</p>
-          <p>API Key set: {process.env.NEXT_PUBLIC_ELEVENLABS_API_KEY ? 'Yes' : 'No'}</p>
         </div>
       </div>
     </main>
