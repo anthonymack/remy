@@ -12,9 +12,12 @@
     "@11labs/react": "^0.0.7",
     "@supabase/supabase-js": "^2.48.1",
     "elevenlabs": "^1.51.0",
+    "motion": "^12.4.7",
     "next": "15.1.7",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
+    "react-swipeable": "^7.0.2",
+    "swiper": "^11.2.4",
     "zustand": "^5.0.3"
   },
   "devDependencies": {

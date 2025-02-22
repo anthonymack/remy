@@ -4,6 +4,11 @@ import { useState, useEffect } from 'react';
 import { useConversation } from '@11labs/react';
 import { Recipe } from '@/types';
 import { supabase } from '@/lib/supabase';
+import { motion } from "motion/react";
+import { Playfair_Display } from 'next/font/google';
+import { useSwipeable, SwipeEventData, SwipeableProps } from 'react-swipeable';
+
+const playfair = Playfair_Display({ subsets: ['latin'] });
 
 interface Message {
   source: string;
@@ -20,6 +25,8 @@ export default function Home() {
   const [recipeUrl, setRecipeUrl] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragDirection, setDragDirection] = useState<'left' | 'right' | null>(null);
 
   const conversation = useConversation({
     apiKey: process.env.NEXT_PUBLIC_ELEVENLABS_API_KEY!,
@@ -140,62 +147,33 @@ export default function Home() {
     }
   };
 
-  const moveToNextStep = async () => {
-    if (!recipe || currentStep >= recipe.recipe_steps.length - 1) return;
-    
-    try {
-      // Stop current conversation if it's speaking
+  const handleSlideChange = async (swiper: any) => {
+    const newStep = swiper.activeIndex;
+    if (newStep !== currentStep) {
       if (status === 'connected') {
         await conversation.endSession();
       }
-      
-      const nextStep = currentStep + 1;
-      setCurrentStep(nextStep);
-      
-      // Clear previous messages for the new step
+      setCurrentStep(newStep);
       setMessages([]);
       
-      const dynamicVariables = createDynamicVariables(recipe, nextStep);
-      await conversation.startSession({
-        agentId: process.env.NEXT_PUBLIC_AGENT_ID!,
-        dynamicVariables
-      });
-    } catch (error) {
-      console.error('Error moving to next step:', error);
-      setError(`Failed to move to next step: ${error instanceof Error ? error.message : 'Unknown error'}`);
-    }
-  };
-
-  const previousStep = async () => {
-    if (!recipe || currentStep <= 0) return;
-    
-    try {
-      // Stop current conversation if it's speaking
-      if (status === 'connected') {
-        await conversation.endSession();
+      if (recipe) {
+        const dynamicVariables = createDynamicVariables(recipe, newStep);
+        await conversation.startSession({
+          agentId: process.env.NEXT_PUBLIC_AGENT_ID!,
+          dynamicVariables
+        });
       }
-      
-      const prevStep = currentStep - 1;
-      setCurrentStep(prevStep);
-      
-      // Clear previous messages for the new step
-      setMessages([]);
-      
-      const dynamicVariables = createDynamicVariables(recipe, prevStep);
-      await conversation.startSession({
-        agentId: process.env.NEXT_PUBLIC_AGENT_ID!,
-        dynamicVariables
-      });
-    } catch (error) {
-      console.error('Error moving to previous step:', error);
-      setError(`Failed to move to previous step: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   };
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const handleRecipeData = (data: Recipe) => {
-    setRecipe(data);
-    setCurrentStep(0);
+  const handleSetRecipe = (newRecipe: Recipe | null) => {
+    if (newRecipe && Array.isArray(newRecipe.recipe_steps) && newRecipe.recipe_steps.length > 0) {
+      setRecipe(newRecipe);
+      setCurrentStep(0);
+    } else {
+      console.error('Invalid recipe structure:', newRecipe);
+      setRecipe(null);
+    }
   };
 
   const handleUrlSubmit = async (e: React.FormEvent) => {
@@ -266,153 +244,218 @@ export default function Home() {
     }
   };
 
-  return (
-    <main className="min-h-screen p-4 md:p-8 bg-gray-100">
-      <div className="max-w-lg mx-auto bg-white rounded-xl shadow-lg overflow-hidden">
-        <h1 className="text-2xl font-bold mb-6 p-8">Cooking Assistant</h1>
-        
-        <form onSubmit={handleUrlSubmit} className="mb-4 p-8">
-          <input
-            type="url"
-            value={recipeUrl}
-            onChange={(e) => setRecipeUrl(e.target.value)}
-            placeholder="Paste recipe URL here..."
-            className="w-full p-2 border rounded"
-            disabled={isProcessing}
-          />
-          <button 
-            type="submit" 
-            disabled={isProcessing || !recipeUrl}
-            className="mt-2 px-4 py-2 bg-blue-500 text-white rounded disabled:bg-gray-300"
-          >
-            {isProcessing ? (
-              <div className="flex items-center justify-center">
-                <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-                Processing Recipe...
-              </div>
-            ) : (
-              'Add Recipe'
-            )}
-          </button>
-        </form>
+  const previousStep = () => {
+    if (currentStep > 0) {
+      setCurrentStep(currentStep - 1);
+      setMessages([]);
+    }
+  };
+  const moveToNextStep = () => {
+    if (recipe?.recipe_steps && currentStep < recipe.recipe_steps.length - 1) {
+      setCurrentStep(currentStep + 1);
+      setMessages([]);
+    }
+  };
 
-        {/* Recipe Selector */}
-        <div className="p-6 border-b">
-          <select 
-            className="w-full p-2 border rounded"
+  const handlers: SwipeableProps = {
+    onSwipedLeft: async () => {
+      if (recipe?.recipe_steps && currentStep < recipe.recipe_steps.length - 1) {
+        await moveToNextStep();
+      }
+    },
+    onSwipedRight: async () => {
+      if (recipe?.recipe_steps && currentStep > 0) {
+        await previousStep();
+      }
+    },
+    onSwiping: (e: SwipeEventData) => {
+      setIsDragging(true);
+      setDragDirection(e.dir === 'Left' ? 'left' : 'right');
+    },
+    onSwiped: () => {
+      setIsDragging(false);
+      setDragDirection(null);
+    },
+    trackMouse: true,
+    trackTouch: true,
+    delta: 50,
+    swipeDuration: 500
+  };
+
+  const swipeHandlers = useSwipeable(handlers);
+
+  return (
+    <main className="min-h-screen bg-[#FAF7F4]">
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="max-w-lg mx-auto p-4 md:p-8"
+      >
+        {/* Recipe Input Section */}
+        <div className="mb-8">
+          <h1 className={`${playfair.className} text-3xl text-[#2C3639] mb-6`}>
+            Cooking Assistant
+          </h1>
+          
+          <motion.form 
+            onSubmit={handleUrlSubmit} 
+            className="space-y-4"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.2 }}
+          >
+            <input
+              type="url"
+              value={recipeUrl}
+              onChange={(e) => setRecipeUrl(e.target.value)}
+              placeholder="Paste recipe URL here..."
+              className="w-full p-4 bg-white rounded-xl border-0 shadow-sm focus:outline-none focus:ring-2 focus:ring-[#2C3639]"
+              disabled={isProcessing}
+            />
+            <motion.button 
+              type="submit"
+              disabled={isProcessing || !recipeUrl}
+              whileHover={{ scale: 1.01 }}
+              whileTap={{ scale: 0.99 }}
+              className="w-full p-4 bg-[#2C3639] text-white rounded-xl font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isProcessing ? 'Processing Recipe...' : 'Start Cooking'}
+            </motion.button>
+          </motion.form>
+
+          <motion.select 
+            className="mt-4 w-full p-4 bg-white rounded-xl border-0 shadow-sm focus:outline-none focus:ring-2 focus:ring-[#2C3639]"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.3 }}
             onChange={(e) => {
               const selectedRecipe = recipes.find(r => r.id === e.target.value);
               if (selectedRecipe) {
-                setRecipe(selectedRecipe);
-                setCurrentStep(0);
+                handleSetRecipe(selectedRecipe);
               }
             }}
             value={recipe?.id || ''}
           >
-            <option value="">Select a recipe...</option>
-            {recipes.map(r => (
+            <option value="">Select a saved recipe...</option>
+            {recipes.map((r) => (
               <option key={r.id} value={r.id}>{r.title}</option>
             ))}
-          </select>
-        </div>
-
-        {/* Status Display */}
-        <div className="p-6 border-b">
-          <div className="flex items-center space-x-2">
-            <div className={`w-2 h-2 rounded-full ${
-              status === 'connected' ? 'bg-green-500' : 
-              status === 'error' ? 'bg-red-500' : 
-              'bg-gray-500'
-            }`}></div>
-            <p className="text-sm font-medium text-gray-600">
-              Status: <span className="font-semibold">{status}</span>
-            </p>
-          </div>
-          {error && (
-            <p className="mt-2 text-sm text-red-600">{error}</p>
-          )}
+          </motion.select>
         </div>
 
         {/* Recipe Content */}
-        {recipe && (
-          <div className="p-6 border-b">
-            <h2 className="text-xl font-bold text-gray-900 mb-4">{recipe.title}</h2>
-            
-            <div className="bg-gray-50 rounded-lg p-4 mb-4">
-              <h3 className="font-medium text-gray-900 mb-2">
-                Step {currentStep + 1} of {recipe.recipe_steps.length}
-              </h3>
-              <p className="text-gray-600">{recipe.recipe_steps[currentStep]?.instruction}</p>
+        {recipe && recipe.recipe_steps && recipe.recipe_steps.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.4 }}
+            className="space-y-6"
+          >
+            <div 
+              {...swipeHandlers}
+              className={`relative bg-white rounded-2xl p-8 shadow-sm touch-pan-y cursor-grab 
+                ${isDragging ? 'cursor-grabbing select-none' : ''}`}
+              style={{
+                transform: isDragging && dragDirection 
+                  ? `translateX(${dragDirection === 'left' ? '-10px' : '10px'})` 
+                  : 'translateX(0)',
+                transition: 'transform 0.2s ease'
+              }}
+            >
+              <div className="flex justify-between text-sm text-gray-500 mb-4">
+                {currentStep > 0 && (
+                  <span className={`transition-opacity ${isDragging && dragDirection === 'right' ? 'opacity-100' : 'opacity-50'}`}>
+                    ← Previous step
+                  </span>
+                )}
+                {currentStep < recipe.recipe_steps.length - 1 && (
+                  <span className={`transition-opacity ${isDragging && dragDirection === 'left' ? 'opacity-100' : 'opacity-50'}`}>
+                    Next step →
+                  </span>
+                )}
+              </div>
+              
+              <h2 className={`${playfair.className} text-lg text-[#2C3639] mb-2`}>
+                Step {currentStep + 1}
+              </h2>
+              <p className="text-xl text-[#2C3639] leading-relaxed">
+                {recipe.recipe_steps[currentStep]?.instruction || ''}
+              </p>
+
+              {/* Step indicator dots */}
+              <div className="flex justify-center space-x-2 mt-6">
+                {recipe.recipe_steps.map((_, index) => (
+                  <div
+                    key={index}
+                    className={`w-2 h-2 rounded-full transition-colors ${
+                      index === currentStep ? 'bg-[#2C3639]' : 'bg-[#E8E3DD]'
+                    }`}
+                  />
+                ))}
+              </div>
+
+              {/* Visual swipe hints */}
+              <div className={`absolute inset-y-0 left-0 w-1/4 bg-gradient-to-r from-[#2C3639]/0 to-transparent 
+                transition-opacity ${currentStep > 0 ? 'opacity-5' : 'opacity-0'} 
+                ${isDragging && dragDirection === 'right' ? 'opacity-10' : ''}`} 
+              />
+              <div className={`absolute inset-y-0 right-0 w-1/4 bg-gradient-to-l from-[#2C3639]/0 to-transparent 
+                transition-opacity ${currentStep < recipe.recipe_steps.length - 1 ? 'opacity-5' : 'opacity-0'}
+                ${isDragging && dragDirection === 'left' ? 'opacity-10' : ''}`} 
+              />
             </div>
 
             {/* Chat Messages */}
-            <div className="mt-4 mb-4 border rounded-lg">
-              <div className="h-60 overflow-y-auto p-4 space-y-3">
-                {messages.map((msg, index) => (
+            <div className="space-y-4">
+              {messages.map((msg, index) => (
+                <motion.div 
+                  key={index}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.1 }}
+                  className={`flex ${msg.role === 'assistant' ? 'justify-start' : 'justify-end'}`}
+                >
                   <div 
-                    key={index} 
-                    className={`flex ${msg.role === 'assistant' ? 'justify-start' : 'justify-end'}`}
+                    className={`rounded-2xl px-6 py-4 max-w-[80%] ${
+                      msg.role === 'assistant'
+                        ? 'bg-[#2C3639] text-white' 
+                        : 'bg-[#E8E3DD] text-[#2C3639]'
+                    }`}
                   >
-                    <div 
-                      className={`rounded-lg px-4 py-2 max-w-[80%] ${
-                        msg.role === 'assistant'
-                          ? 'bg-blue-100 text-blue-900' 
-                          : 'bg-gray-100 text-gray-900'
-                      }`}
-                    >
-                      <p className="text-sm whitespace-pre-wrap">{msg.message}</p>
-                    </div>
+                    <p className="text-base">{msg.message}</p>
                   </div>
-                ))}
+                </motion.div>
+              ))}
+            </div>
+
+            {/* Controls */}
+            <div className="fixed bottom-0 left-0 right-0 p-4 bg-[#FAF7F4] border-t border-[#E8E3DD]">
+              <div className="max-w-lg mx-auto flex space-x-4">
+                {status === 'connected' ? (
+                  <motion.button
+                    onClick={stopConversation}
+                    whileHover={{ scale: 1.01 }}
+                    whileTap={{ scale: 0.99 }}
+                    className="w-full p-4 bg-white border border-[#2C3639] text-[#2C3639] rounded-xl"
+                  >
+                    Stop Assistant
+                  </motion.button>
+                ) : (
+                  <motion.button
+                    onClick={startConversation}
+                    whileHover={{ scale: 1.01 }}
+                    whileTap={{ scale: 0.99 }}
+                    className="w-full p-4 bg-[#2C3639] text-white rounded-xl"
+                    disabled={status === 'starting'}
+                  >
+                    {status === 'starting' ? 'Starting...' : 'Start Assistant'}
+                  </motion.button>
+                )}
               </div>
             </div>
-
-            <div className="flex space-x-3">
-              <button
-                onClick={previousStep}
-                disabled={currentStep === 0}
-                className="flex-1 p-3 bg-gray-100 rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-              >
-                Previous
-              </button>
-              <button
-                onClick={moveToNextStep}
-                disabled={currentStep === recipe.recipe_steps.length - 1}
-                className="flex-1 p-3 bg-blue-600 text-white rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-              >
-                Next
-              </button>
-            </div>
-          </div>
+          </motion.div>
         )}
-
-        {/* Voice Control */}
-        <div className="p-6">
-          <button
-            onClick={startConversation}
-            disabled={status === 'connected' || status === 'starting'}
-            className={`w-full p-4 rounded-lg font-medium transition-colors ${
-              status === 'connected' || status === 'starting'
-                ? 'bg-gray-300 cursor-not-allowed'
-                : 'bg-blue-600 text-white hover:bg-blue-700'
-            }`}
-          >
-            {status === 'starting' ? 'Starting...' : 'Start Cooking Assistant'}
-          </button>
-          
-          {status === 'connected' && (
-            <button
-              onClick={stopConversation}
-              className="mt-3 w-full p-4 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition-colors"
-            >
-              Stop Assistant
-            </button>
-          )}
-        </div>
-      </div>
+      </motion.div>
     </main>
   );
 }
