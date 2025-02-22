@@ -43,7 +43,6 @@ export default function Home() {
     },
     onError: (error: Error) => {
       console.error('ElevenLabs error:', error);
-      setError(`Connection error: ${error.message}`);
       setStatus('error');
     }
   });
@@ -112,7 +111,6 @@ export default function Home() {
   const startConversation = async () => {
     try {
       setStatus('starting');
-      setError(null);
       
       await navigator.mediaDevices.getUserMedia({ audio: true });
 
@@ -129,7 +127,6 @@ export default function Home() {
 
     } catch (error) {
       console.error('Startup error:', error);
-      setError(`Failed to start: ${error instanceof Error ? error.message : 'Unknown error'}`);
       setStatus('error');
     }
   };
@@ -142,7 +139,6 @@ export default function Home() {
       }
     } catch (error) {
       console.error('Stop error:', error);
-      setError(`Failed to stop: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   };
 
