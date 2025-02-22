@@ -37,6 +37,7 @@ export interface RecipeStep {
 
 /** Complete recipe information */
 export interface Recipe {
+  id: string;
   name: string;
   description: string;
   cooking_time: string;

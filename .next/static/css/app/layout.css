@@ -573,6 +573,9 @@ video {
 .min-h-screen {
   min-height: 100vh;
 }
+.w-full {
+  width: 100%;
+}
 .max-w-2xl {
   max-width: 42rem;
 }
@@ -596,6 +599,9 @@ video {
 }
 .rounded-lg {
   border-radius: 0.5rem;
+}
+.border {
+  border-width: 1px;
 }
 .bg-blue-500 {
   --tw-bg-opacity: 1;
@@ -638,6 +644,9 @@ video {
 }
 .p-8 {
   padding: 2rem;
+}
+.p-2 {
+  padding: 0.5rem;
 }
 .px-4 {
   padding-left: 1rem;

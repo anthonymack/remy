@@ -1,14 +1,16 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useConversation } from '@11labs/react';
 import { Message, Recipe } from '@/types';
+import { supabase } from '@/lib/supabase';
 
 export default function Home() {
   const [recipe, setRecipe] = useState<Recipe | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [status, setStatus] = useState('idle');
   const [currentStep, setCurrentStep] = useState(0);
+  const [recipes, setRecipes] = useState<Recipe[]>([]);
 
   const conversation = useConversation({
     apiKey: process.env.NEXT_PUBLIC_ELEVENLABS_API_KEY!,
@@ -29,6 +31,35 @@ export default function Home() {
       setStatus('error');
     }
   });
+
+  useEffect(() => {
+    async function fetchRecipes() {
+      const { data, error } = await supabase
+        .from('recipes')
+        .select(`
+          *,
+          recipe_ingredients (
+            amount,
+            unit,
+            ingredients (name)
+          ),
+          recipe_steps (
+            step_number,
+            instruction
+          )
+        `)
+        .order('name');
+
+      if (error) {
+        console.error('Error fetching recipes:', error);
+        return;
+      }
+
+      setRecipes(data || []);
+    }
+
+    fetchRecipes();
+  }, []);
 
   const startConversation = async () => {
     try {
@@ -115,6 +146,26 @@ export default function Home() {
       <div className="max-w-2xl mx-auto bg-white rounded-lg shadow-lg p-8">
         <h1 className="text-2xl font-bold mb-6">Cooking Assistant</h1>
         
+        {/* Recipe Selector */}
+        <div className="mb-6">
+          <select 
+            className="w-full p-2 border rounded"
+            onChange={(e) => {
+              const selectedRecipe = recipes.find(r => r.id === e.target.value);
+              if (selectedRecipe) {
+                setRecipe(selectedRecipe);
+                setCurrentStep(0);
+              }
+            }}
+            value={recipe?.id || ''}
+          >
+            <option value="">Select a recipe...</option>
+            {recipes.map(r => (
+              <option key={r.id} value={r.id}>{r.name}</option>
+            ))}
+          </select>
+        </div>
+
         {/* Status Display */}
         <div className="mb-6 p-4 bg-gray-50 rounded">
           <p>Status: <span className="font-semibold">{status}</span></p>

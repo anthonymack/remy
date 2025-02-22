@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@11labs/react": "^0.0.7",
+    "@supabase/supabase-js": "^2.48.1",
     "elevenlabs": "^1.51.0",
     "next": "15.1.7",
     "react": "^19.0.0",
