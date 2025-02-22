@@ -2,6 +2,8 @@
 
 import { useState } from 'react';
 import { useConversation } from '@11labs/react';
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+import { ConversationConfig, ConversationSession } from '@/types';
 
 interface RecipeIngredient {
   amount: number;
@@ -32,19 +34,6 @@ interface Message {
 
 interface ConversationError {
   message: string;
-}
-
-interface ConversationConfig {
-  apiKey: string;
-  onConnect: () => void;
-  onDisconnect: () => void;
-  onMessage: (message: Message) => void;
-  onError: (error: ConversationError) => void;
-}
-
-interface ConversationSession {
-  agentId: string;
-  context: string;
 }
 
 export default function Home() {
@@ -141,9 +130,9 @@ export default function Home() {
     await conversation.updateContext(formatRecipeContext(recipe));
   };
 
-  // This would be called when Make sends the recipe data
-  const handleRecipeData = (recipeData: Recipe) => {
-    setRecipe(recipeData);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const handleRecipeData = async (data: any) => {
+    setRecipe(data);
     setCurrentStep(0);
   };
 
