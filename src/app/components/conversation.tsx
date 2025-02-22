@@ -3,14 +3,23 @@
 import { useConversation } from '@11labs/react';
 import { useCallback } from 'react';
 
+interface Message {
+  content: string;
+  // add other message properties as needed
+}
+
+interface ConversationError {
+  message: string;
+  // add other error properties as needed
+}
+
 export function Conversation() {
   const conversation = useConversation({
     onConnect: () => console.log('Connected'),
     onDisconnect: () => console.log('Disconnected'),
-    onMessage: (message) => console.log('Message:', message),
-    onError: (error) => console.error('Error:', error),
+    onMessage: (message: Message) => console.log('Message:', message),
+    onError: (error: ConversationError) => console.error('Error:', error),
   });
-
 
   const startConversation = useCallback(async () => {
     try {
@@ -22,8 +31,8 @@ export function Conversation() {
         agentId: 'RnodwNtSjXU9HP0IzJHR', // Replace with your agent ID
       });
 
-    } catch (error) {
-      console.error('Failed to start conversation:', error);
+    } catch {
+      console.error('Failed to start conversation');
     }
   }, [conversation]);
 

@@ -17,7 +17,7 @@ export async function GET() {
 
     const data = await response.json();
     return NextResponse.json({ signedUrl: data.signed_url });
-  } catch (err) {
+  } catch {
     return NextResponse.json(
       { error: 'Failed to generate signed URL' },
       { status: 500 }
@@ -27,13 +27,9 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
-    const recipeData = await request.json();
-    
-    // You could store this in a global state management solution
-    // or emit it via WebSocket to the client
-    
+    await request.json();
     return NextResponse.json({ success: true });
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: 'Failed to process recipe' }, { status: 400 });
   }
 }

@@ -27,15 +27,6 @@ interface Recipe {
   recipe_steps: RecipeStep[];
 }
 
-interface Message {
-  type: string;
-  content: string;
-}
-
-interface ConversationError {
-  message: string;
-}
-
 export default function Home() {
   const [recipe, setRecipe] = useState<Recipe | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -52,10 +43,10 @@ export default function Home() {
       console.log('Disconnected from ElevenLabs');
       setStatus('disconnected');
     },
-    onMessage: (message) => {
+    onMessage: (message: unknown) => {
       console.log('Received message:', message);
     },
-    onError: (error) => {
+    onError: (error: Error) => {
       console.error('ElevenLabs error:', error);
       setError(`Connection error: ${error.message}`);
       setStatus('error');
@@ -118,7 +109,10 @@ export default function Home() {
     const nextStep = currentStep + 1;
     setCurrentStep(nextStep);
     
-    await conversation.updateContext(formatRecipeContext(recipe));
+    await conversation.startSession({
+      agentId: process.env.NEXT_PUBLIC_AGENT_ID!,
+      context: formatRecipeContext(recipe)
+    });
   };
 
   const previousStep = async () => {
@@ -127,11 +121,13 @@ export default function Home() {
     const prevStep = currentStep - 1;
     setCurrentStep(prevStep);
     
-    await conversation.updateContext(formatRecipeContext(recipe));
+    await conversation.startSession({
+      agentId: process.env.NEXT_PUBLIC_AGENT_ID!,
+      context: formatRecipeContext(recipe)
+    });
   };
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const handleRecipeData = async (data: any) => {
+  const handleRecipeData = async (data: Recipe) => {
     setRecipe(data);
     setCurrentStep(0);
   };
