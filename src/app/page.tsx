@@ -34,7 +34,12 @@ export default function Home() {
 
   useEffect(() => {
     async function fetchRecipes() {
-      console.log('Fetching recipes...');
+      console.log('Starting to fetch recipes...');
+      
+      // Log Supabase connection info (safely)
+      console.log('Supabase URL configured:', !!process.env.NEXT_PUBLIC_SUPABASE_URL);
+      console.log('Supabase Anon Key configured:', !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
+      
       const { data, error } = await supabase
         .from('recipes')
         .select(`
@@ -53,8 +58,16 @@ export default function Home() {
         `)
         .order('title');
 
+      // Log the raw response
+      console.log('Supabase response:', { data, error });
+
       if (error) {
         console.error('Error fetching recipes:', error);
+        return;
+      }
+
+      if (!data || data.length === 0) {
+        console.log('No recipes found in the database');
         return;
       }
 
@@ -75,7 +88,7 @@ export default function Home() {
         recipe_steps: item.recipe_steps || []
       }));
 
-      console.log('Fetched recipes:', transformedData);
+      console.log('Transformed recipes:', transformedData);
       setRecipes(transformedData);
     }
 
