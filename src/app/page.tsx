@@ -35,6 +35,7 @@ export default function Home() {
   useEffect(() => {
     async function fetchRecipes() {
       console.log('Starting to fetch recipes...');
+      console.log('Supabase URL:', process.env.NEXT_PUBLIC_SUPABASE_URL);
       
       const { data, error } = await supabase
         .from('recipes')
@@ -58,7 +59,8 @@ export default function Home() {
         `)
         .order('title');
 
-      console.log('Supabase response:', { data, error });
+      console.log('Raw Supabase response:', data);
+      console.log('Supabase error if any:', error);
 
       if (error) {
         console.error('Error fetching recipes:', error);
