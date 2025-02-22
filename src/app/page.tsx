@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useConversation } from '@11labs/react';
-import { Message, Recipe } from '@/types';
+import { Message, Recipe, RecipeIngredient, RecipeStep } from '@/types';
 import { supabase } from '@/lib/supabase';
 
 export default function Home() {
@@ -34,28 +34,49 @@ export default function Home() {
 
   useEffect(() => {
     async function fetchRecipes() {
+      console.log('Fetching recipes...');
       const { data, error } = await supabase
         .from('recipes')
         .select(`
-          *,
+          id,
+          title,
+          total_time,
           recipe_ingredients (
+            ingredient,
             amount,
-            unit,
-            ingredients (name)
+            unit
           ),
           recipe_steps (
             step_number,
             instruction
           )
         `)
-        .order('name');
+        .order('title');
 
       if (error) {
         console.error('Error fetching recipes:', error);
         return;
       }
 
-      setRecipes(data || []);
+      // Add proper typing for the database response
+      type DbRecipe = {
+        id: string;
+        title: string;
+        total_time: string;
+        recipe_ingredients: RecipeIngredient[];
+        recipe_steps: RecipeStep[];
+      };
+
+      const transformedData = (data as DbRecipe[] || []).map(item => ({
+        id: item.id,
+        title: item.title,
+        total_time: item.total_time,
+        recipe_ingredients: item.recipe_ingredients || [],
+        recipe_steps: item.recipe_steps || []
+      }));
+
+      console.log('Fetched recipes:', transformedData);
+      setRecipes(transformedData);
     }
 
     fetchRecipes();
@@ -94,12 +115,12 @@ export default function Home() {
 
   const formatRecipeContext = (recipe: Recipe) => {
     const ingredients = recipe.recipe_ingredients
-      .map(ing => `${ing.amount} ${ing.unit} ${ing.ingredients.name}`)
+      .map(ing => `${ing.amount} ${ing.unit} ${ing.ingredient}`)
       .join(', ');
 
     return `
-      I'm helping someone cook ${recipe.name}. 
-      This recipe serves ${recipe.serving_size} people and takes ${recipe.cooking_time}.
+      I'm helping someone cook ${recipe.title}. 
+      This recipe takes ${recipe.total_time}.
       
       The ingredients needed are: ${ingredients}
       
@@ -161,7 +182,7 @@ export default function Home() {
           >
             <option value="">Select a recipe...</option>
             {recipes.map(r => (
-              <option key={r.id} value={r.id}>{r.name}</option>
+              <option key={r.id} value={r.id}>{r.title}</option>
             ))}
           </select>
         </div>
@@ -176,8 +197,7 @@ export default function Home() {
 
         {recipe && (
           <div className="mb-8">
-            <h2 className="text-2xl font-bold mb-4">{recipe.name}</h2>
-            <p className="mb-4">{recipe.description}</p>
+            <h2 className="text-2xl font-bold mb-4">{recipe.title}</h2>
             
             <div className="bg-gray-50 p-4 rounded-lg mb-4">
               <h3 className="font-bold mb-2">Current Step ({currentStep + 1} of {recipe.recipe_steps.length})</h3>

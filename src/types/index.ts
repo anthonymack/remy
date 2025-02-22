@@ -22,11 +22,9 @@ export interface ConversationSession {
 
 /** Recipe ingredient with amount, unit and name */
 export interface RecipeIngredient {
+  ingredient: string;
   amount: number;
   unit: string;
-  ingredients: {
-    name: string;
-  };
 }
 
 /** Single step in a recipe */
@@ -38,10 +36,8 @@ export interface RecipeStep {
 /** Complete recipe information */
 export interface Recipe {
   id: string;
-  name: string;
-  description: string;
-  cooking_time: string;
-  serving_size: number;
+  title: string;
+  total_time: string;
   recipe_ingredients: RecipeIngredient[];
   recipe_steps: RecipeStep[];
 } 
