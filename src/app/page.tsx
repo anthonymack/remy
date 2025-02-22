@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useConversation } from '@11labs/react';
-import { Recipe } from '@/types';
+import { Recipe, Message } from '@/types';
 import { supabase } from '@/lib/supabase';
 
 export default function Home() {
