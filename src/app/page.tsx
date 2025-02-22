@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useConversation } from '@11labs/react';
-import { ConversationConfig, ConversationSession, Message, Recipe } from '@/types';
+import { Message, Recipe } from '@/types';
 
 export default function Home() {
   const [recipe, setRecipe] = useState<Recipe | null>(null);
