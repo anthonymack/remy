@@ -84,10 +84,34 @@ export default function Home() {
       setError(null);
       
       await navigator.mediaDevices.getUserMedia({ audio: true });
-      
+
+      const context = `SYSTEM: You are a cooking assistant. You have access to the following recipe information which you should use to help guide the user:
+
+RECIPE NAME: ${recipe?.title}
+TOTAL TIME: ${recipe?.total_time} minutes
+
+INGREDIENTS:
+${recipe?.recipe_ingredients?.map(ing => `- ${ing.amount} ${ing.unit} ${ing.ingredient}`).join('\n')}
+
+COOKING STEPS:
+${recipe?.recipe_steps?.map(step => `${step.step_number}. ${step.instruction}`).join('\n')}
+
+CURRENT STEP: ${currentStep + 1}
+INSTRUCTION: ${recipe?.recipe_steps?.[currentStep]?.instruction}
+
+YOUR ROLE: You should:
+1. Help guide the user through the current step
+2. Answer questions about ingredients and other steps
+3. Be ready to move to the next step when they're done
+4. Always reference the recipe details provided above when answering questions
+
+Remember to use this recipe information in your responses.`;
+
+      console.log('Starting conversation with context:', context);
+
       await conversation.startSession({
         agentId: process.env.NEXT_PUBLIC_AGENT_ID!,
-        context: "You are a helpful cooking assistant."
+        context: context
       });
 
     } catch (error) {
