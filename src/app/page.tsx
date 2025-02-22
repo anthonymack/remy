@@ -18,7 +18,6 @@ interface Message {
 
 export default function Home() {
   const [recipe, setRecipe] = useState<Recipe | null>(null);
-  const [error, setError] = useState<string | null>(null);
   const [status, setStatus] = useState('idle');
   const [currentStep, setCurrentStep] = useState(0);
   const [recipes, setRecipes] = useState<Recipe[]>([]);
@@ -144,25 +143,6 @@ export default function Home() {
     } catch (error) {
       console.error('Stop error:', error);
       setError(`Failed to stop: ${error instanceof Error ? error.message : 'Unknown error'}`);
-    }
-  };
-
-  const handleSlideChange = async (swiper: any) => {
-    const newStep = swiper.activeIndex;
-    if (newStep !== currentStep) {
-      if (status === 'connected') {
-        await conversation.endSession();
-      }
-      setCurrentStep(newStep);
-      setMessages([]);
-      
-      if (recipe) {
-        const dynamicVariables = createDynamicVariables(recipe, newStep);
-        await conversation.startSession({
-          agentId: process.env.NEXT_PUBLIC_AGENT_ID!,
-          dynamicVariables
-        });
-      }
     }
   };
 
