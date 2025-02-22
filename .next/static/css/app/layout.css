@@ -567,6 +567,9 @@ video {
 .right-0 {
   right: 0px;
 }
+.float-right {
+  float: right;
+}
 .mx-auto {
   margin-left: auto;
   margin-right: auto;
@@ -589,11 +592,20 @@ video {
 .mt-6 {
   margin-top: 1.5rem;
 }
+.mr-4 {
+  margin-right: 1rem;
+}
+.mt-8 {
+  margin-top: 2rem;
+}
 .flex {
   display: flex;
 }
 .h-2 {
   height: 0.5rem;
+}
+.h-6 {
+  height: 1.5rem;
 }
 .min-h-screen {
   min-height: 100vh;
@@ -604,8 +616,14 @@ video {
 .w-2 {
   width: 0.5rem;
 }
+.w-6 {
+  width: 1.5rem;
+}
 .w-full {
   width: 100%;
+}
+.w-16 {
+  width: 4rem;
 }
 .max-w-\[80\%\] {
   max-width: 80%;
@@ -634,6 +652,9 @@ video {
 }
 .items-center {
   align-items: center;
+}
+.items-baseline {
+  align-items: baseline;
 }
 .justify-start {
   justify-content: flex-start;
@@ -740,6 +761,9 @@ video {
 .to-transparent {
   --tw-gradient-to: transparent var(--tw-gradient-to-position);
 }
+.p-2 {
+  padding: 0.5rem;
+}
 .p-4 {
   padding: 1rem;
 }
@@ -762,6 +786,12 @@ video {
   padding-top: 1rem;
   padding-bottom: 1rem;
 }
+.text-right {
+  text-align: right;
+}
+.font-serif {
+  font-family: ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
+}
 .text-3xl {
   font-size: 1.875rem;
   line-height: 2.25rem;
@@ -782,11 +812,17 @@ video {
   font-size: 1.25rem;
   line-height: 1.75rem;
 }
+.text-\[32px\] {
+  font-size: 32px;
+}
 .font-medium {
   font-weight: 500;
 }
 .leading-relaxed {
   line-height: 1.625;
+}
+.leading-\[1\.2\] {
+  line-height: 1.2;
 }
 .text-\[\#2C3639\] {
   --tw-text-opacity: 1;
@@ -799,6 +835,10 @@ video {
 .text-white {
   --tw-text-opacity: 1;
   color: rgb(255 255 255 / var(--tw-text-opacity, 1));
+}
+.text-\[\#6B5F55\] {
+  --tw-text-opacity: 1;
+  color: rgb(107 95 85 / var(--tw-text-opacity, 1));
 }
 .antialiased {
   -webkit-font-smoothing: antialiased;
@@ -856,6 +896,11 @@ body {
   color: var(--foreground);
   background: var(--background);
   font-family: Arial, Helvetica, sans-serif;
+}
+
+.hover\:bg-\[\#E8E3DD\]:hover {
+  --tw-bg-opacity: 1;
+  background-color: rgb(232 227 221 / var(--tw-bg-opacity, 1));
 }
 
 .focus\:outline-none:focus {
