@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useConversation } from '@11labs/react';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { ConversationConfig, ConversationSession } from '@/types';
+import { ConversationConfig, ConversationSession, Message } from '@/types';
 
 interface RecipeIngredient {
   amount: number;
@@ -43,7 +43,7 @@ export default function Home() {
       console.log('Disconnected from ElevenLabs');
       setStatus('disconnected');
     },
-    onMessage: (message: unknown) => {
+    onMessage: (message: Message) => {
       console.log('Received message:', message);
     },
     onError: (error: Error) => {
@@ -127,7 +127,8 @@ export default function Home() {
     });
   };
 
-  const handleRecipeData = async (data: Recipe) => {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const handleRecipeData = (data: Recipe) => {
     setRecipe(data);
     setCurrentStep(0);
   };
