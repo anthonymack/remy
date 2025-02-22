@@ -36,29 +36,28 @@ export default function Home() {
     async function fetchRecipes() {
       console.log('Starting to fetch recipes...');
       
-      // Log Supabase connection info (safely)
-      console.log('Supabase URL configured:', !!process.env.NEXT_PUBLIC_SUPABASE_URL);
-      console.log('Supabase Anon Key configured:', !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
-      
       const { data, error } = await supabase
         .from('recipes')
         .select(`
           id,
           title,
           total_time,
+          source_url,
+          created_at,
           recipe_ingredients (
+            recipe_id,
             ingredient,
             amount,
             unit
           ),
           recipe_steps (
+            recipe_id,
             step_number,
             instruction
           )
         `)
         .order('title');
 
-      // Log the raw response
       console.log('Supabase response:', { data, error });
 
       if (error) {
@@ -71,25 +70,7 @@ export default function Home() {
         return;
       }
 
-      // Add proper typing for the database response
-      type DbRecipe = {
-        id: string;
-        title: string;
-        total_time: string;
-        recipe_ingredients: RecipeIngredient[];
-        recipe_steps: RecipeStep[];
-      };
-
-      const transformedData = (data as DbRecipe[] || []).map(item => ({
-        id: item.id,
-        title: item.title,
-        total_time: item.total_time,
-        recipe_ingredients: item.recipe_ingredients || [],
-        recipe_steps: item.recipe_steps || []
-      }));
-
-      console.log('Transformed recipes:', transformedData);
-      setRecipes(transformedData);
+      setRecipes(data);
     }
 
     fetchRecipes();
