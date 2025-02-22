@@ -11,6 +11,8 @@ export default function Home() {
   const [status, setStatus] = useState('idle');
   const [currentStep, setCurrentStep] = useState(0);
   const [recipes, setRecipes] = useState<Recipe[]>([]);
+  const [recipeUrl, setRecipeUrl] = useState('');
+  const [isProcessing, setIsProcessing] = useState(false);
 
   const conversation = useConversation({
     apiKey: process.env.NEXT_PUBLIC_ELEVENLABS_API_KEY!,
@@ -172,11 +174,107 @@ export default function Home() {
     setCurrentStep(0);
   };
 
+  const handleUrlSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsProcessing(true);
+    
+    try {
+      // Log the request we're about to send
+      console.log('Sending to Make:', { url: recipeUrl });
+
+      const response = await fetch(process.env.NEXT_PUBLIC_MAKE_WEBHOOK_URL!, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify({ url: recipeUrl })
+      });
+
+      // Log the full response
+      const responseText = await response.text();
+      console.log('Make response:', {
+        status: response.status,
+        statusText: response.statusText,
+        body: responseText
+      });
+
+      if (!response.ok) {
+        throw new Error(`Make webhook failed: ${response.status} ${responseText}`);
+      }
+
+      // Wait for Make to process and Supabase to update
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      // Fix the recipes refresh - use Supabase directly instead of API route
+      const { data: newRecipes, error } = await supabase
+        .from('recipes')
+        .select(`
+          id,
+          title,
+          total_time,
+          source_url,
+          created_at,
+          recipe_ingredients (
+            recipe_id,
+            ingredient,
+            amount,
+            unit
+          ),
+          recipe_steps (
+            recipe_id,
+            step_number,
+            instruction
+          )
+        `)
+        .order('title');
+
+      if (!error && newRecipes) {
+        setRecipes(newRecipes);
+      }
+      
+      setRecipeUrl('');
+      
+    } catch (error) {
+      console.error('Error:', error);
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
   return (
     <main className="min-h-screen p-8 bg-gray-100">
       <div className="max-w-2xl mx-auto bg-white rounded-lg shadow-lg p-8">
         <h1 className="text-2xl font-bold mb-6">Cooking Assistant</h1>
         
+        <form onSubmit={handleUrlSubmit} className="mb-4">
+          <input
+            type="url"
+            value={recipeUrl}
+            onChange={(e) => setRecipeUrl(e.target.value)}
+            placeholder="Paste recipe URL here..."
+            className="w-full p-2 border rounded"
+            disabled={isProcessing}
+          />
+          <button 
+            type="submit" 
+            disabled={isProcessing || !recipeUrl}
+            className="mt-2 px-4 py-2 bg-blue-500 text-white rounded disabled:bg-gray-300"
+          >
+            {isProcessing ? (
+              <div className="flex items-center justify-center">
+                <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Processing Recipe...
+              </div>
+            ) : (
+              'Add Recipe'
+            )}
+          </button>
+        </form>
+
         {/* Recipe Selector */}
         <div className="mb-6">
           <select 
