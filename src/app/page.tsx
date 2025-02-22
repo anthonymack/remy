@@ -2,30 +2,7 @@
 
 import { useState } from 'react';
 import { useConversation } from '@11labs/react';
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { ConversationConfig, ConversationSession, Message } from '@/types';
-
-interface RecipeIngredient {
-  amount: number;
-  unit: string;
-  ingredients: {
-    name: string;
-  };
-}
-
-interface RecipeStep {
-  step_number: number;
-  instruction: string;
-}
-
-interface Recipe {
-  name: string;
-  description: string;
-  cooking_time: string;
-  serving_size: number;
-  recipe_ingredients: RecipeIngredient[];
-  recipe_steps: RecipeStep[];
-}
+import { ConversationConfig, ConversationSession, Message, Recipe } from '@/types';
 
 export default function Home() {
   const [recipe, setRecipe] = useState<Recipe | null>(null);

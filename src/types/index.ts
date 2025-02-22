@@ -18,4 +18,29 @@ export interface ConversationConfig {
 export interface ConversationSession {
   agentId: string;
   context: string;
+}
+
+/** Recipe ingredient with amount, unit and name */
+export interface RecipeIngredient {
+  amount: number;
+  unit: string;
+  ingredients: {
+    name: string;
+  };
+}
+
+/** Single step in a recipe */
+export interface RecipeStep {
+  step_number: number;
+  instruction: string;
+}
+
+/** Complete recipe information */
+export interface Recipe {
+  name: string;
+  description: string;
+  cooking_time: string;
+  serving_size: number;
+  recipe_ingredients: RecipeIngredient[];
+  recipe_steps: RecipeStep[];
 } 
