@@ -13,6 +13,7 @@ import { serif, sans } from './fonts';
 import { StateWrapper } from '@/components/StateWrapper';
 import { ErrorState } from '@/components/ErrorState';
 import '@/app/styles/globals.scss';
+import { IngredientsState } from '@/components/IngredientsState';
 
 interface Message {
   message: string;
@@ -309,15 +310,20 @@ export default function Home() {
       <StateWrapper isVisible={!!recipe && !isProcessing && !showIngredients}>
         <ReadyState
           recipe={recipe!}
-          onStart={() => {
-            setShowIngredients(true);
-            startConversation();
-          }}
+          onStart={() => setShowIngredients(true)}
           onBack={() => handleSetRecipe(null)}
         />
       </StateWrapper>
 
-      <StateWrapper isVisible={!!recipe && showIngredients}>
+      <StateWrapper isVisible={!!recipe && showIngredients && status === 'idle'}>
+        <IngredientsState
+          recipe={recipe!}
+          onStart={startConversation}
+          onBack={() => setShowIngredients(false)}
+        />
+      </StateWrapper>
+
+      <StateWrapper isVisible={!!recipe && showIngredients && status !== 'idle'}>
         <StepState
           recipe={recipe!}
           currentStep={currentStep}

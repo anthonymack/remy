@@ -4,12 +4,13 @@
 
 @layer base {
   :root {
-    --color-background: 250 247 244;
-    --color-text: 44 54 57;
-    --color-text-secondary: 107 95 85;
-    --color-surface: 255 255 255;
-    --color-border: 232 227 221;
-    --color-accent: 30 69 62;
+    --color-background: #F9F4EC;
+    --color-text: #3A2C23;
+    --color-text-secondary: #92877D;
+    --color-text-tertiary: #2C3E34;
+    --color-surface: #E8DFCA;
+    --color-border: #4D2D23;
+    --color-accent: #1B3C28;
   }
 }
 
@@ -22,12 +23,28 @@
     @apply max-w-xl mx-auto flex flex-col items-center justify-center min-h-screen;
   }
 
+  .heading-logo {
+    @apply font-serif text-6xl text-text font-semibold leading-tight;
+  }
+
+  .heading-step {
+    @apply font-sans text-text-secondary font-bold leading-tight mb-1;
+  }
+
+  .heading-xxl {
+    @apply font-serif text-5xl text-text font-semibold leading-tight;
+  }
+  
   .heading-xl {
     @apply font-serif text-4xl text-text font-semibold leading-tight;
   }
 
   .heading-lg {
     @apply font-serif text-3xl text-text font-semibold leading-tight;
+  }
+
+  .heading-md {
+    @apply font-sans text-text-tertiary font-semibold leading-tight;
   }
 
   .body-lg {
@@ -39,7 +56,7 @@
   }
 
   .input-url {
-    @apply w-full p-4 bg-surface rounded-full border-2 border-transparent
+    @apply w-full p-4 bg-surface rounded-full border-2
       focus:border-accent focus:outline-none transition-colors;
   }
 
@@ -108,6 +125,57 @@
 
   .step-indicator-inactive {
     @apply bg-border;
+  }
+
+  .first-letter-uppercase::first-letter {
+    text-transform: uppercase;
+  }
+
+  .ingredients-state {
+    @apply flex flex-col min-h-screen;
+
+    .ingredients-content {
+      @apply flex-1 p-8;
+    }
+
+    .ingredient-group {
+      @apply mb-8;
+    }
+
+    .ingredient-list {
+      @apply space-y-3;
+    }
+
+    .ingredient-item {
+      @apply flex items-baseline gap-4 pb-1;
+    }
+
+    .ingredient-amount {
+      @apply bg-surface px-2 py-1 rounded-md text-sm font-sans font-extrabold;
+    }
+
+    .ingredient-name {
+      @apply text-lg font-serif font-semibold text-text first-letter-uppercase;
+    }
+  }
+
+  // Update action bar styles
+  .action-bar {
+    @apply fixed bottom-20 left-0 right-0 px-8 flex justify-between items-center;
+    
+    .nav-button {
+      &:first-child {
+        @apply absolute left-8;  // Back button
+      }
+      
+      &:nth-child(2) {
+        @apply mx-auto left-0 right-0;  // Speak button
+      }
+      
+      &:last-child {
+        @apply absolute right-8;  // Next button
+      }
+    }
   }
 }
 
@@ -198,5 +266,38 @@
   
   &--inactive {
     @apply bg-border;
+  }
+}
+
+// Navigation buttons
+.nav-button {
+  @apply w-20 h-20 rounded-full flex items-center justify-center transition-transform hover:scale-105;
+
+  &--back {
+    @apply bg-surface;
+  }
+
+  &--next {
+    @apply bg-accent;
+  }
+
+  &--speak {
+    @apply bg-accent;
+  }
+
+  svg {
+    @apply w-8 h-8;
+
+    &.back-icon {
+      @apply fill-background rotate-180;
+    }
+
+    &.next-icon {
+      @apply fill-background;
+    }
+
+    &.speak-icon {
+      @apply fill-background;
+    }
   }
 } 

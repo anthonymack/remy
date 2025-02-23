@@ -8,12 +8,13 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        background: 'rgb(var(--color-background))',
-        text: 'rgb(var(--color-text))',
-        'text-secondary': 'rgb(var(--color-text-secondary))',
-        surface: 'rgb(var(--color-surface))',
-        border: 'rgb(var(--color-border))',
-        accent: 'rgb(var(--color-accent))',
+        background: 'var(--color-background)',
+        text: 'var(--color-text)',
+        'text-secondary': 'var(--color-text-secondary)',
+        'text-tertiary': 'var(--color-text-tertiary)',
+        surface: 'var(--color-surface)',
+        border: 'var(--color-border)',
+        accent: 'var(--color-accent)',
       },
       fontFamily: {
         sans: ['var(--font-sans)'],

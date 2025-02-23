@@ -18,7 +18,7 @@ export const InitialState = ({
 }) => {
   return (
     <div className="centered-content text-center">
-      <h1 className="heading-xl mb-4">Rémy</h1>
+      <h1 className="heading-logo">Rémy</h1>
       <p className="body-lg mb-12">What are we cooking today?</p>
 
       <div className="w-full max-w-md">

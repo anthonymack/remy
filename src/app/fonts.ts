@@ -10,6 +10,6 @@ export const serif = Source_Serif_4({
 export const sans = Manrope({
   subsets: ['latin'],
   display: 'swap',
-  weight: ['400', '500', '600'],
+  weight: ['400', '500', '600', '700', '800'],
   variable: '--font-sans',
 }); 
