@@ -241,8 +241,8 @@ export default function Home() {
         throw new Error('Failed to send recipe to parser');
       }
 
-      // Wait a moment for Make to process and insert into Supabase
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      // Wait longer for Make to process and insert into Supabase
+      await new Promise(resolve => setTimeout(resolve, 30000));
 
       // Fetch the newly parsed recipe from Supabase
       const { data, error } = await supabase
