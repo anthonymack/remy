@@ -192,25 +192,32 @@ html, body {
     }
   }
 
-  // Update action bar styles
-  .nav-bar {
-    @apply fixed bottom-8 left-0 right-0 px-8 flex justify-center items-center;
-  }
-  
   .action-bar {
-    @apply fixed bottom-8 left-0 right-0 px-8 flex justify-between items-center;
+    @apply fixed bottom-8 left-0 right-0 px-8 flex items-center;
     
-    .nav-button {
-      &:first-child {
-        @apply absolute left-8;  // Back button
-      }
+    // For 2 buttons (ReadyState)
+    &:has(.nav-button:nth-child(2):last-child) {
+      @apply justify-between;
       
-      &:nth-child(2) {
-        @apply mx-auto left-0 right-0;  // Speak button
+      .nav-button {
+        position: static;
       }
-      
-      &:last-child {
-        @apply absolute right-8;  // Next button
+    }
+    
+    // For 3 buttons (StepState)
+    &:has(.nav-button:nth-child(3)) {
+      .nav-button {
+        &:first-child {
+          @apply absolute left-8;
+        }
+        
+        &:nth-child(2) {
+          @apply mx-auto left-0 right-0;
+        }
+        
+        &:last-child {
+          @apply absolute right-8;
+        }
       }
     }
   }
@@ -437,15 +444,3 @@ html, body {
     rounded-full bg-surface text-text-secondary hover:text-text 
     transition-colors duration-200;
 }
-
-.nav-bar {
-  @apply fixed bottom-8 left-0 right-0 px-8 flex justify-center items-center;
-  
-  .nav-button--next {
-    @apply relative z-10;
-  }
-  
-  .nav-button--surface {
-    @apply absolute right-8;
-  }
-} 

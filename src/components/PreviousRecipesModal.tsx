@@ -1,5 +1,4 @@
 import { Recipe } from '@/types';
-import { motion } from 'framer-motion';
 
 interface PreviousRecipesModalProps {
   recipes: Recipe[];

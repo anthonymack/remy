@@ -8,17 +8,19 @@ interface ReadyStateProps {
 
 export const ReadyState = ({ recipe, onStart, onBack }: ReadyStateProps) => {
   return (
-    <div className="centered-content text-center">
-      <h1 className="heading-xxl mb-4">{recipe.title}</h1>
-      
-      <div className="flex items-center gap-4 mb-12">
-        <div className="text-text-secondary">
-          <span className="heading-md">{recipe.total_time} </span>
-          <span className="heading-md">minutes to cook</span>
+    <div className="centered-content text-center min-h-screen flex flex-col">
+      <div className="flex-1 flex flex-col justify-center">
+        <h1 className="heading-xxl mb-4">{recipe.title}</h1>
+        
+        <div className="flex items-center justify-center gap-4 mb-12">
+          <div className="text-text-secondary">
+            <span className="heading-md">{recipe.total_time} </span>
+            <span className="heading-md">minutes to cook</span>
+          </div>
         </div>
       </div>
 
-      <div className="action-bar">
+      <div className="action-bar" style={{ justifyContent: 'space-between' }}>
         <button 
           onClick={onBack}
           className="nav-button nav-button--back"

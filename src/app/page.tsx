@@ -42,11 +42,13 @@ export default function Home() {
       console.log('Connected to ElevenLabs');
       setStatus('connected');
       setIsListening(true);
+      setIsConversationActive(true);
     },
     onDisconnect: () => {
       console.log('Disconnected from ElevenLabs');
       setStatus('disconnected');
       setIsListening(false);
+      setIsConversationActive(false);
     },
     onMessage: (message: ElevenLabsMessage) => {
       console.log('Raw message from ElevenLabs:', message);
@@ -177,25 +179,13 @@ export default function Home() {
     }
   };
 
-  const toggleMicrophone = async () => {
-    try {
-      if (status === 'connected') {
-        await conversation.endSession();
-        setStatus('disconnected');
-      } else {
-        setStatus('connecting');
-        setMessages([]); // Clear messages when starting new session
-        const dynamicVariables = createDynamicVariables(recipe!, currentStep);
-        await conversation.startSession({
-          agentId: process.env.NEXT_PUBLIC_AGENT_ID!,
-          dynamicVariables
-        });
-      }
-    } catch (error) {
-      console.error('Error toggling microphone:', error);
-      setError(error instanceof Error ? error.message : 'Failed to toggle microphone');
-      setStatus('error');
+  const toggleMicrophone = () => {
+    if (isConversationActive) {
+      conversation.endSession();
+    } else {
+      startConversation();
     }
+    setIsConversationActive(prev => !prev);
   };
 
   // Modify step navigation to handle active conversations
