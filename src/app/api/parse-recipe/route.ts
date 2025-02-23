@@ -12,49 +12,55 @@ export async function POST(request: Request) {
       );
     }
 
-    console.log('Making request to Make webhook:', process.env.NEXT_PUBLIC_MAKE_WEBHOOK_URL);
-
-    // Increase timeout to 30 seconds
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => {
-      console.log('Request timed out after 30 seconds');
-      controller.abort();
-    }, 30000);
+    if (!process.env.NEXT_PUBLIC_MAKE_WEBHOOK_URL) {
+      console.error('Make webhook URL not configured');
+      return NextResponse.json(
+        { error: 'Recipe parser not configured' },
+        { status: 500 }
+      );
+    }
 
     try {
-      const response = await fetch(process.env.NEXT_PUBLIC_MAKE_WEBHOOK_URL!, {
+      console.log('Starting Make webhook request...');
+      
+      // Make the request without a timeout
+      const response = await fetch(process.env.NEXT_PUBLIC_MAKE_WEBHOOK_URL, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url }),
-        signal: controller.signal
+        headers: { 
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify({ url })
       });
 
-      clearTimeout(timeoutId);
-      console.log('Received response from Make:', response.status, response.statusText);
+      console.log('Make webhook response:', {
+        status: response.status,
+        statusText: response.statusText,
+        headers: Object.fromEntries(response.headers.entries())
+      });
 
-      if (!response.ok) {
-        console.error('Make webhook error:', {
-          status: response.status,
-          statusText: response.statusText
-        });
-        throw new Error(`Make webhook failed: ${response.statusText}`);
-      }
+      // Return immediately with a 202 Accepted status
+      // This tells the client the request was accepted but is still processing
+      return NextResponse.json(
+        { message: 'Recipe parsing started' },
+        { status: 202 }
+      );
 
-      const recipe = await response.json();
-      return NextResponse.json(recipe);
     } catch (error: unknown) {
-      if (error instanceof Error && error.name === 'AbortError') {
-        console.error('Make webhook request timed out');
-        return NextResponse.json(
-          { error: 'Make webhook request timed out - the recipe parsing service might be busy or unavailable' },
-          { status: 504 }
-        );
-      }
-      throw error;
+      console.error('Make webhook error:', {
+        name: error instanceof Error ? error.name : 'Unknown',
+        message: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined
+      });
+      
+      return NextResponse.json(
+        { error: 'Failed to contact recipe parser' },
+        { status: 500 }
+      );
     }
 
   } catch (error: unknown) {
-    console.error('Error in parse-recipe:', error);
+    console.error('Parse recipe error:', error);
     return NextResponse.json(
       { error: error instanceof Error ? error.message : 'Failed to parse recipe' },
       { status: 500 }

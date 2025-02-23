@@ -241,52 +241,41 @@ export default function Home() {
         throw new Error('Failed to send recipe to parser');
       }
 
-      // Wait longer for Make to process and insert into Supabase
-      await new Promise(resolve => setTimeout(resolve, 30000));
+      // Poll for recipe every 2 seconds for up to 30 seconds
+      let attempts = 0;
+      const maxAttempts = 15;
+      
+      while (attempts < maxAttempts) {
+        const { data, error } = await supabase
+          .from('recipes')
+          .select('*, recipe_ingredients(*), recipe_steps(*)')
+          .eq('source_url', recipeUrl)
+          .order('created_at', { ascending: false }) // Get most recent first
+          .limit(1)  // Only get one result
+          .maybeSingle(); // Returns null if no results, instead of throwing error
 
-      // Fetch the newly parsed recipe from Supabase
-      const { data, error } = await supabase
-        .from('recipes')
-        .select(`
-          id,
-          title,
-          total_time,
-          source_url,
-          created_at,
-          recipe_ingredients (
-            recipe_id,
-            ingredient,
-            amount,
-            unit,
-            aisle
-          ),
-          recipe_steps (
-            recipe_id,
-            step_number,
-            instruction
-          )
-        `)
-        .eq('source_url', recipeUrl)
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .single();
+        if (error && error.code !== 'PGRST116') { // Ignore "no rows returned" error
+          console.error('Supabase polling error:', error);
+          // Only throw error if it's not a "no rows" error
+          throw new Error('Failed to check recipe status');
+        }
 
-      if (error) {
-        console.error('Supabase error:', error);
-        throw new Error('Recipe not found');
+        if (data) {
+          setRecipe(data);
+          setShowIngredients(false);
+          setCurrentStep(0);
+          setMessages([]);
+          setRecipeUrl('');
+          setIsProcessing(false);
+          setStatus('idle');
+          return;
+        }
+
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        attempts++;
       }
 
-      if (!data) {
-        throw new Error('No recipe data returned');
-      }
-
-      setRecipe(data);
-      setShowIngredients(false);
-      setCurrentStep(0);
-      setMessages([]);
-      setRecipeUrl('');
-      setIsProcessing(false);
-      setStatus('idle');
+      throw new Error('Recipe processing timed out');
     } catch (error) {
       console.error('Error:', error);
       setError(error instanceof Error ? error.message : 'An error occurred');
