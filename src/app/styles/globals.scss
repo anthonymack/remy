@@ -1,0 +1,202 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --color-background: 250 247 244;
+    --color-text: 44 54 57;
+    --color-text-secondary: 107 95 85;
+    --color-surface: 255 255 255;
+    --color-border: 232 227 221;
+    --color-accent: 30 69 62;
+  }
+}
+
+@layer components {
+  .page-container {
+    @apply min-h-screen bg-background px-4 py-8;
+  }
+
+  .centered-content {
+    @apply max-w-xl mx-auto flex flex-col items-center justify-center min-h-screen;
+  }
+
+  .heading-xl {
+    @apply font-serif text-4xl text-text font-semibold leading-tight;
+  }
+
+  .heading-lg {
+    @apply font-serif text-3xl text-text font-semibold leading-tight;
+  }
+
+  .body-lg {
+    @apply text-lg text-text-secondary leading-relaxed;
+  }
+
+  .body-base {
+    @apply text-base text-text-secondary leading-relaxed;
+  }
+
+  .input-url {
+    @apply w-full p-4 bg-surface rounded-full border-2 border-transparent
+      focus:border-accent focus:outline-none transition-colors;
+  }
+
+  .button {
+    @apply px-6 py-4 rounded-full font-medium transition-all duration-200
+      disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .button-primary {
+    @apply bg-accent text-surface hover:bg-opacity-90;
+  }
+
+  .button-secondary {
+    @apply border-2 border-accent text-accent hover:bg-accent 
+      hover:text-surface;
+  }
+
+  .glow-effect {
+    @apply fixed inset-0 pointer-events-none;
+    background: radial-gradient(
+      circle at center,
+      rgb(var(--color-accent) / 0.2) 0%,
+      transparent 70%
+    );
+    @apply opacity-0;
+    @apply mix-blend-soft-light;
+  }
+
+  .glow-effect.active {
+    animation: glow 2s ease-in-out infinite;
+  }
+
+  .chat-container {
+    @apply fixed bottom-24 left-0 right-0 max-h-[40vh] overflow-y-auto;
+    mask-image: linear-gradient(
+      to top, 
+      rgba(0,0,0,1) 0%,
+      rgba(0,0,0,1) 80%,
+      rgba(0,0,0,0) 100%
+    );
+  }
+
+  .chat-message {
+    @apply rounded-2xl px-6 py-4 max-w-[80%] mb-4;
+  }
+
+  .chat-message-assistant {
+    @apply bg-accent text-surface;
+  }
+
+  .chat-message-user {
+    @apply bg-border text-text;
+  }
+
+  .nav-controls {
+    @apply fixed bottom-0 left-0 right-0 bg-background border-t border-border;
+  }
+
+  .step-indicator {
+    @apply w-2 h-2 rounded-full transition-colors;
+  }
+
+  .step-indicator-active {
+    @apply bg-accent;
+  }
+
+  .step-indicator-inactive {
+    @apply bg-border;
+  }
+}
+
+@keyframes glow {
+  0% {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  50% {
+    opacity: 0.5;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+}
+
+@keyframes pulse {
+  0% { transform: scale(0.95); }
+  50% { transform: scale(1); }
+  100% { transform: scale(0.95); }
+}
+
+@keyframes gradient {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+// Typography
+.heading-xl {
+  @apply font-serif text-4xl text-text font-semibold leading-tight;
+}
+
+.heading-lg {
+  @apply font-serif text-3xl text-text font-semibold leading-tight;
+}
+
+.body-lg {
+  @apply text-lg text-text-secondary leading-relaxed;
+}
+
+.body-base {
+  @apply text-base text-text-secondary leading-relaxed;
+}
+
+// Components
+.glow-effect {
+  @apply fixed inset-0 pointer-events-none;
+  background: radial-gradient(
+    circle at center,
+    var(--color-accent) 0%,
+    transparent 70%
+  );
+  opacity: 0;
+  mix-blend-mode: soft-light;
+  
+  &.active {
+    animation: glow 2s ease-in-out infinite;
+  }
+}
+
+// Chat elements
+.chat-message {
+  @apply rounded-2xl px-6 py-4 max-w-[80%] mb-4;
+  
+  &--assistant {
+    @apply bg-accent text-surface;
+  }
+  
+  &--user {
+    @apply bg-border text-text;
+  }
+}
+
+// Navigation
+.nav-controls {
+  @apply fixed bottom-0 left-0 right-0 bg-background border-t border-border;
+}
+
+.step-indicator {
+  @apply w-2 h-2 rounded-full transition-colors;
+  
+  &--active {
+    @apply bg-accent;
+  }
+  
+  &--inactive {
+    @apply bg-border;
+  }
+} 

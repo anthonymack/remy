@@ -1,7 +1,6 @@
 export interface Message {
-  source: string;
   message: string;
-  role?: 'assistant' | 'user';
+  role: 'assistant' | 'user';
 }
 
 export interface ConversationError {
@@ -38,6 +37,7 @@ export interface RecipeIngredient {
   ingredient: string;
   amount: number;
   unit: string;
+  aisle: string;
 }
 
 /** Single step in a recipe */
@@ -45,4 +45,10 @@ export interface RecipeStep {
   recipe_id: string;
   step_number: number;
   instruction: string;
+}
+
+export interface ConversationState {
+  status: 'idle' | 'starting' | 'connected' | 'disconnected' | 'error';
+  error: string | null;
+  isSpeaking: boolean;
 } 
