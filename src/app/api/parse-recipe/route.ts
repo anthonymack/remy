@@ -12,7 +12,7 @@ export async function POST(request: Request) {
       );
     }
 
-    if (!process.env.NEXT_PUBLIC_MAKE_WEBHOOK_URL) {
+    if (!process.env.MAKE_WEBHOOK_URL) {
       console.error('Make webhook URL not configured');
       return NextResponse.json(
         { error: 'Recipe parser not configured' },
@@ -23,28 +23,32 @@ export async function POST(request: Request) {
     try {
       console.log('Starting Make webhook request...');
       
-      // Make the request without a timeout
-      const response = await fetch(process.env.NEXT_PUBLIC_MAKE_WEBHOOK_URL, {
+      const response = await fetch(process.env.MAKE_WEBHOOK_URL, {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
           'Accept': 'application/json'
         },
-        body: JSON.stringify({ url })
+        body: JSON.stringify({ url }),
+        signal: AbortSignal.timeout(30000) // 30 seconds timeout
       });
 
+      if (!response.ok) {
+        console.error('Make webhook failed:', {
+          status: response.status,
+          statusText: response.statusText
+        });
+        throw new Error(`Make webhook failed with status: ${response.status}`);
+      }
+
+      const data = await response.json();
       console.log('Make webhook response:', {
         status: response.status,
         statusText: response.statusText,
-        headers: Object.fromEntries(response.headers.entries())
+        data
       });
 
-      // Return immediately with a 202 Accepted status
-      // This tells the client the request was accepted but is still processing
-      return NextResponse.json(
-        { message: 'Recipe parsing started' },
-        { status: 202 }
-      );
+      return NextResponse.json(data);
 
     } catch (error: unknown) {
       console.error('Make webhook error:', {
