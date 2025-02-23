@@ -1,13 +1,13 @@
-import { motion } from 'framer-motion';
 import { Recipe } from '@/types';
 
-export const InitialState = ({ 
-  recipeUrl, 
-  onUrlChange, 
-  onSubmit, 
+export const InitialState = ({
+  recipeUrl,
+  onUrlChange,
+  onSubmit,
   isProcessing,
   recipes,
-  onRecipeSelect
+  onRecipeSelect,
+  error
 }: {
   recipeUrl: string;
   onUrlChange: (url: string) => void;
@@ -15,6 +15,7 @@ export const InitialState = ({
   isProcessing: boolean;
   recipes: Recipe[];
   onRecipeSelect: (recipe: Recipe) => void;
+  error?: string;
 }) => {
   return (
     <div className="centered-content text-center">
@@ -23,6 +24,7 @@ export const InitialState = ({
 
       <div className="w-full max-w-md">
         <form onSubmit={onSubmit} className="space-y-4">
+          {error && <p className="text-red-500 text-sm">{error}</p>}
           <input
             type="url"
             value={recipeUrl}
@@ -58,4 +60,4 @@ export const InitialState = ({
       </div>
     </div>
   );
-}; 
+} 

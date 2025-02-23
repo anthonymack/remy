@@ -2,9 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { useConversation } from '@11labs/react';
-import { Recipe } from '@/types';
+import { Recipe, Message } from '@/types';
 import { supabase } from '@/lib/supabase';
-import { motion } from 'framer-motion';
 import { InitialState } from '@/components/InitialState';
 import { LoadingState } from '@/components/LoadingState';
 import { ReadyState } from '@/components/ReadyState';
@@ -15,9 +14,13 @@ import { ErrorState } from '@/components/ErrorState';
 import '@/app/styles/globals.scss';
 import { IngredientsState } from '@/components/IngredientsState';
 
-interface Message {
+interface ElevenLabsMessage {
+  source: 'ai' | 'user';
   message: string;
-  role: 'assistant' | 'user';
+}
+
+interface ElevenLabsError {
+  message: string;
 }
 
 export default function Home() {
@@ -30,63 +33,67 @@ export default function Home() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [showIngredients, setShowIngredients] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
-  const handleMessage = async (message: Message) => {
-    console.log('Received message:', message);
-    // No need to reformat, just add to messages
-    setMessages(prevMessages => [...prevMessages, message]);
-
-    // Check for navigation commands in user messages
-    if (message.role === 'user') {
-      const lowerMessage = message.message.toLowerCase();
-      console.log('Processing user message:', lowerMessage);
-      
-      // Handle "next" commands
-      if (
-        lowerMessage.includes('next step') || 
-        lowerMessage.includes('go forward') ||
-        lowerMessage.includes('move forward')
-      ) {
-        console.log('Next step command detected');
-        if (recipe && currentStep < recipe.recipe_steps.length - 1) {
-          console.log('Current step before:', currentStep);
-          setCurrentStep(currentStep + 1);
-        }
-        return;
-      }
-      
-      // Handle "previous" commands
-      if (
-        lowerMessage.includes('previous step') || 
-        lowerMessage.includes('go back') ||
-        lowerMessage.includes('last step') ||
-        lowerMessage.includes('move back')
-      ) {
-        console.log('Previous step command detected');
-        if (recipe && currentStep > 0) {
-          console.log('Current step before:', currentStep);
-          setCurrentStep(currentStep - 1);
-        }
-        return;
-      }
-    }
-  };
+  const [isListening, setIsListening] = useState(false);
 
   const conversation = useConversation({
     apiKey: process.env.NEXT_PUBLIC_ELEVENLABS_API_KEY!,
     onConnect: () => {
       console.log('Connected to ElevenLabs');
       setStatus('connected');
+      setIsListening(true);
     },
     onDisconnect: () => {
       console.log('Disconnected from ElevenLabs');
       setStatus('disconnected');
+      setIsListening(false);
     },
-    onMessage: handleMessage,
-    onError: (error: Error) => {
+    onMessage: (message: ElevenLabsMessage) => {
+      console.log('Raw message from ElevenLabs:', message);
+      
+      const formattedMessage = {
+        message: message.message,
+        source: message.source
+      };
+      
+      setMessages(prevMessages => [...prevMessages, formattedMessage]);
+
+      // Only process commands from user messages
+      if (message.source === 'user') {
+        const lowerMessage = message.message.toLowerCase();
+        
+        // Handle "next" commands
+        if (
+          lowerMessage.includes('next step') || 
+          lowerMessage.includes('go forward') ||
+          lowerMessage.includes('move forward')
+        ) {
+          console.log('Next step command detected');
+          if (recipe && currentStep < recipe.recipe_steps.length - 1) {
+            setCurrentStep(currentStep + 1);
+          }
+          return;
+        }
+        
+        // Handle "previous" commands
+        if (
+          lowerMessage.includes('previous step') || 
+          lowerMessage.includes('go back') ||
+          lowerMessage.includes('last step') ||
+          lowerMessage.includes('move back')
+        ) {
+          console.log('Previous step command detected');
+          if (recipe && currentStep > 0) {
+            setCurrentStep(currentStep - 1);
+          }
+          return;
+        }
+      }
+    },
+    onError: (error: ElevenLabsError) => {
       console.error('ElevenLabs error:', error);
       setError(`Connection error: ${error.message}`);
       setStatus('error');
+      setIsListening(false);
     }
   });
 
@@ -329,7 +336,7 @@ export default function Home() {
           recipe={recipe!}
           currentStep={currentStep}
           messages={messages}
-          isListening={status === 'connected'}
+          isListening={isListening}
           onPrevious={() => setCurrentStep(Math.max(0, currentStep - 1))}
           onNext={() => setCurrentStep(Math.min(recipe!.recipe_steps.length - 1, currentStep + 1))}
           onStop={stopConversation}

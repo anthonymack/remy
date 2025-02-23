@@ -20,7 +20,7 @@ export function Conversation() {
       // Convert ElevenLabs message format to our Message format
       const formattedMessage: Message = {
         message: rawMessage.content,
-        role: 'assistant'
+        source: 'ai'
       };
       console.log('Message:', formattedMessage);
       // You'll need to pass this message up to your parent component

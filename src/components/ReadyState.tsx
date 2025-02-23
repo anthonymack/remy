@@ -1,5 +1,4 @@
-import { motion } from 'framer-motion';
-import { Recipe } from '../types';
+import { Recipe } from '@/types';
 
 interface ReadyStateProps {
   recipe: Recipe;
@@ -47,4 +46,4 @@ export const ReadyState = ({ recipe, onStart, onBack }: ReadyStateProps) => {
 
     </div>
   );
-}; 
+} 
