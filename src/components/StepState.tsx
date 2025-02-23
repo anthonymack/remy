@@ -1,6 +1,6 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { Recipe, Message } from '../types';
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 interface StepStateProps {
   recipe: Recipe;
@@ -27,6 +27,58 @@ export const StepState = ({
   const step = recipe.recipe_steps[currentStep];
   const isFirstStep = currentStep === 0;
   const isLastStep = currentStep === recipe.recipe_steps.length - 1;
+  const [audioLevel, setAudioLevel] = useState(0);
+  const animationFrameRef = useRef<number>();
+  const analyserRef = useRef<AnalyserNode | null>(null);
+  const mediaStreamRef = useRef<MediaStream | null>(null);
+
+  useEffect(() => {
+    let audioContext: AudioContext | null = null;
+
+    const setupAudioAnalyser = async () => {
+      if (isConversationActive) {
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+          mediaStreamRef.current = stream;
+          audioContext = new AudioContext();
+          const source = audioContext.createMediaStreamSource(stream);
+          const analyser = audioContext.createAnalyser();
+          analyser.fftSize = 256;
+          source.connect(analyser);
+          analyserRef.current = analyser;
+
+          const updateLevel = () => {
+            if (!analyserRef.current) return;
+            const dataArray = new Uint8Array(analyserRef.current.frequencyBinCount);
+            analyserRef.current.getByteFrequencyData(dataArray);
+            const average = dataArray.reduce((a, b) => a + b) / dataArray.length;
+            const normalized = Math.min(average / 128, 1);
+            setAudioLevel(normalized);
+            animationFrameRef.current = requestAnimationFrame(updateLevel);
+          };
+
+          updateLevel();
+        } catch (err) {
+          console.error('Error accessing microphone:', err);
+        }
+      }
+    };
+
+    setupAudioAnalyser();
+
+    return () => {
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+      }
+      if (audioContext) {
+        audioContext.close();
+      }
+      if (mediaStreamRef.current) {
+        mediaStreamRef.current.getTracks().forEach(track => track.stop());
+      }
+      analyserRef.current = null;
+    };
+  }, [isConversationActive]);
 
   return (
     <div className="page-container relative">
@@ -104,6 +156,9 @@ export const StepState = ({
           <button 
             onClick={onStop}
             className={`nav-button nav-button--speak ${isConversationActive ? 'active' : ''}`}
+            style={{ 
+              '--audio-level': audioLevel,
+            } as React.CSSProperties}
           >
             <svg className="speak-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512">
               <path d="M192 0C139 0 96 43 96 96l0 160c0 53 43 96 96 96s96-43 96-96l0-160c0-53-43-96-96-96zM64 216c0-13.3-10.7-24-24-24s-24 10.7-24 24l0 40c0 89.1 66.2 162.7 152 174.4l0 33.6-48 0c-13.3 0-24 10.7-24 24s10.7 24 24 24l72 0 72 0c13.3 0 24-10.7 24-24s-10.7-24-24-24l-48 0 0-33.6c85.8-11.7 152-85.3 152-174.4l0-40c0-13.3-10.7-24-24-24s-24 10.7-24 24l0 40c0 70.7-57.3 128-128 128s-128-57.3-128-128l0-40z"/>

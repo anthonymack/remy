@@ -384,6 +384,11 @@ html, body {
     
     &.active {
       @apply bg-red-500;
+      transform: scale(calc(1 + var(--audio-level) * 0.6));
+      transition: transform 0.1s cubic-bezier(0.34, 1.56, 0.64, 1);
+      
+      // Optional: subtle glow effect on the button
+      box-shadow: 0 0 calc(var(--audio-level) * 20px) rgba(239, 68, 68, 0.3);
     }
     
     svg {
@@ -443,4 +448,12 @@ html, body {
   @apply absolute top-4 right-4 w-8 h-8 flex items-center justify-center 
     rounded-full bg-surface text-text-secondary hover:text-text 
     transition-colors duration-200;
+}
+
+.nav-button--speak {
+  &.active {
+    .speak-icon {
+      @apply text-accent;
+    }
+  }
 }

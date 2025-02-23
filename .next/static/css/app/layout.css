@@ -1289,6 +1289,9 @@ html, body {
 .nav-button--speak.active {
   --tw-bg-opacity: 1;
   background-color: rgb(239 68 68 / var(--tw-bg-opacity, 1));
+  transform: scale(calc(1 + var(--audio-level) * 0.6));
+  transition: transform 0.1s cubic-bezier(0.34, 1.56, 0.64, 1);
+  box-shadow: 0 0 calc(var(--audio-level) * 20px) rgba(239, 68, 68, 0.3);
 }
 .nav-button--speak svg {
   fill: var(--color-background);
@@ -1384,6 +1387,10 @@ html, body {
 
 .modal-close:hover {
   color: var(--color-text);
+}
+
+.nav-button--speak.active .speak-icon {
+  color: var(--color-accent);
 }
 
 .hover\:bg-opacity-80:hover {
