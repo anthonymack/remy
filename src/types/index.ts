@@ -1,6 +1,6 @@
 export interface Message {
   message: string;
-  role: 'assistant' | 'user';
+  source: 'ai' | 'user';
 }
 
 export interface ConversationError {

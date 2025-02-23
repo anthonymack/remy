@@ -2,22 +2,30 @@
 
 import { useConversation } from '@11labs/react';
 import { useCallback } from 'react';
-
-interface Message {
-  content: string;
-  // add other message properties as needed
-}
+import { Message } from '@/types';
 
 interface ConversationError {
   message: string;
-  // add other error properties as needed
+}
+
+interface ElevenLabsMessage {
+  content: string;
 }
 
 export function Conversation() {
   const conversation = useConversation({
     onConnect: () => console.log('Connected'),
     onDisconnect: () => console.log('Disconnected'),
-    onMessage: (message: Message) => console.log('Message:', message),
+    onMessage: (rawMessage: ElevenLabsMessage) => {
+      // Convert ElevenLabs message format to our Message format
+      const formattedMessage: Message = {
+        message: rawMessage.content,
+        role: 'assistant'
+      };
+      console.log('Message:', formattedMessage);
+      // You'll need to pass this message up to your parent component
+      // via a callback prop
+    },
     onError: (error: ConversationError) => console.error('Error:', error),
   });
 

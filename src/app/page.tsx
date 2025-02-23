@@ -33,6 +33,7 @@ export default function Home() {
 
   const handleMessage = async (message: Message) => {
     console.log('Received message:', message);
+    // No need to reformat, just add to messages
     setMessages(prevMessages => [...prevMessages, message]);
 
     // Check for navigation commands in user messages

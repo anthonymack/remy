@@ -90,25 +90,41 @@
   }
 
   .chat-container {
-    @apply fixed bottom-24 left-0 right-0 max-h-[40vh] overflow-y-auto;
-    mask-image: linear-gradient(
-      to top, 
-      rgba(0,0,0,1) 0%,
-      rgba(0,0,0,1) 80%,
-      rgba(0,0,0,0) 100%
-    );
+    @apply fixed bottom-40 left-0 right-0 max-h-[40vh] overflow-y-auto;
+    padding-top: 2rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    
+    .message-wrapper {
+      @apply w-full px-8;
+      
+      .message-inner {
+        @apply max-w-xl mx-auto flex;
+        
+        &.message-inner--ai {
+          @apply justify-start;
+        }
+        
+        &.message-inner--user {
+          @apply justify-end;
+        }
+      }
+    }
   }
 
   .chat-message {
-    @apply rounded-2xl px-6 py-4 max-w-[80%] mb-4;
-  }
+    @apply rounded-2xl px-4 py-3 max-w-[80%];
 
-  .chat-message-assistant {
-    @apply bg-accent text-surface;
-  }
+    &-ai {
+      @apply bg-surface text-text font-sans font-semibold;
+      border-bottom-left-radius: 4px;
+    }
 
-  .chat-message-user {
-    @apply bg-border text-text;
+    &-user {
+      @apply bg-accent text-background font-sans font-semibold;
+      border-bottom-right-radius: 4px;
+    }
   }
 
   .nav-controls {
@@ -116,15 +132,15 @@
   }
 
   .step-indicator {
-    @apply w-2 h-2 rounded-full transition-colors;
+    @apply hidden;
   }
 
   .step-indicator-active {
-    @apply bg-accent;
+    @apply hidden;
   }
 
   .step-indicator-inactive {
-    @apply bg-border;
+    @apply hidden;
   }
 
   .first-letter-uppercase::first-letter {
@@ -161,7 +177,7 @@
 
   // Update action bar styles
   .action-bar {
-    @apply fixed bottom-20 left-0 right-0 px-8 flex justify-between items-center;
+    @apply fixed bottom-8 left-0 right-0 px-8 flex justify-between items-center;
     
     .nav-button {
       &:first-child {
@@ -175,6 +191,22 @@
       &:last-child {
         @apply absolute right-8;  // Next button
       }
+    }
+  }
+
+  .step-header {
+    @apply relative z-10 bg-background;
+    
+    &::after {
+      content: '';
+      @apply absolute left-0 right-0 bottom-0 h-32;
+      background: linear-gradient(
+        to bottom,
+        rgb(249, 244, 236) 30%,
+        rgba(249, 244, 236, 0) 100%
+      );
+      transform: translateY(100%);
+      pointer-events: none;
     }
   }
 }
@@ -239,16 +271,42 @@
   }
 }
 
-// Chat elements
-.chat-message {
-  @apply rounded-2xl px-6 py-4 max-w-[80%] mb-4;
+// New Chat elements
+.chat-container {
+  @apply fixed bottom-32 left-0 right-0 max-h-[60vh] overflow-y-auto;
+  padding-top: 2rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
   
-  &--assistant {
-    @apply bg-accent text-surface;
+  .message-wrapper {
+    @apply w-full px-8;
+    
+    .message-inner {
+      @apply max-w-xl mx-auto flex pb-4;
+      
+      &.message-inner--ai {
+        @apply justify-start;
+      }
+      
+      &.message-inner--user {
+        @apply justify-end;
+      }
+    }
   }
-  
-  &--user {
-    @apply bg-border text-text;
+}
+
+.chat-message {
+  @apply rounded-2xl px-4 py-3 max-w-[80%];
+
+  &-ai {
+    @apply bg-surface text-text font-sans font-semibold;
+    border-bottom-left-radius: 4px;
+  }
+
+  &-user {
+    @apply bg-accent text-background font-sans font-semibold;
+    border-bottom-right-radius: 4px;
   }
 }
 
@@ -258,20 +316,24 @@
 }
 
 .step-indicator {
-  @apply w-2 h-2 rounded-full transition-colors;
-  
-  &--active {
-    @apply bg-accent;
-  }
-  
-  &--inactive {
-    @apply bg-border;
-  }
+  @apply hidden;
+}
+
+.step-indicator-active {
+  @apply hidden;
+}
+
+.step-indicator-inactive {
+  @apply hidden;
 }
 
 // Navigation buttons
 .nav-button {
-  @apply w-20 h-20 rounded-full flex items-center justify-center transition-transform hover:scale-105;
+  @apply w-20 h-20 rounded-full flex items-center justify-center transition-transform hover:scale-110;
+
+  &:disabled {
+    @apply opacity-50 cursor-not-allowed hover:scale-100;
+  }
 
   &--back {
     @apply bg-surface;
@@ -300,4 +362,13 @@
       @apply fill-background;
     }
   }
+}
+
+// Progress bar
+.progress-bar-container {
+  @apply max-w-[240px] h-1 bg-surface rounded-full mx-auto mb-12 overflow-hidden;
+}
+
+.progress-bar-fill {
+  @apply h-full bg-accent transition-all duration-300 ease-out;
 } 
