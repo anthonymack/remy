@@ -34,6 +34,7 @@ export default function Home() {
   const [showIngredients, setShowIngredients] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isListening, setIsListening] = useState(false);
+  const [isConversationActive, setIsConversationActive] = useState(false);
 
   const conversation = useConversation({
     apiKey: process.env.NEXT_PUBLIC_ELEVENLABS_API_KEY!,
@@ -159,141 +160,116 @@ export default function Home() {
       .join('\n')
   });
 
-  const readCurrentStep = async () => {
-    console.log('Reading step:', currentStep);
-    if (!recipe || !recipe.recipe_steps) {
-      console.error('No recipe or steps available');
-      return;
-    }
-    
+  const startConversation = async () => {
     try {
-      // End the current session if one exists
-      if (status === 'connected') {
-        await conversation.endSession();
-      }
+      setShowIngredients(false); // Move to step view
+      setStatus('connecting');
       
-      // Create new dynamic variables
-      const dynamicVariables = createDynamicVariables(recipe, currentStep);
-      console.log('Dynamic variables:', dynamicVariables);
-
-      // Start a new session with the current step
+      const dynamicVariables = createDynamicVariables(recipe!, currentStep);
       await conversation.startSession({
         agentId: process.env.NEXT_PUBLIC_AGENT_ID!,
         dynamicVariables
       });
     } catch (error) {
-      console.error('Error reading step:', error);
-    }
-  };
-
-  const startConversation = async () => {
-    try {
-      setStatus('starting');
-      setError(null);
-
-      if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-        await navigator.mediaDevices.getUserMedia({ audio: true });
-      } else {
-        throw new Error('getUserMedia is not supported in this browser.');
-      }
-
-      if (!recipe) {
-        throw new Error('No recipe selected');
-      }
-
-      // Start initial narration
-      await readCurrentStep();
-      setStatus('connected');
-
-    } catch (error) {
-      console.error('Startup error:', error);
-      setError(`Failed to start: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      console.error('Error starting conversation:', error);
+      setError(error instanceof Error ? error.message : 'Failed to start conversation');
       setStatus('error');
     }
   };
 
-  const stopConversation = async () => {
+  const toggleMicrophone = async () => {
     try {
-      if (conversation) {
+      if (status === 'connected') {
         await conversation.endSession();
-        setStatus('idle');
+        setStatus('disconnected');
+      } else {
+        setStatus('connecting');
+        setMessages([]); // Clear messages when starting new session
+        const dynamicVariables = createDynamicVariables(recipe!, currentStep);
+        await conversation.startSession({
+          agentId: process.env.NEXT_PUBLIC_AGENT_ID!,
+          dynamicVariables
+        });
       }
     } catch (error) {
-      console.error('Stop error:', error);
+      console.error('Error toggling microphone:', error);
+      setError(error instanceof Error ? error.message : 'Failed to toggle microphone');
+      setStatus('error');
+    }
+  };
+
+  // Modify step navigation to handle active conversations
+  const handleStepChange = async (newStep: number) => {
+    try {
+      if (status === 'connected') {
+        // End current conversation before changing steps
+        await conversation.endSession();
+        setStatus('disconnected');
+      }
+      
+      // Clear messages and update step
+      setMessages([]);
+      setCurrentStep(newStep);
+      
+      if (status === 'connected' || status === 'connecting') {
+        // Start new conversation with updated step context
+        const dynamicVariables = createDynamicVariables(recipe!, newStep);
+        await conversation.startSession({
+          agentId: process.env.NEXT_PUBLIC_AGENT_ID!,
+          dynamicVariables
+        });
+      }
+    } catch (error) {
+      console.error('Error changing steps:', error);
+      setError(error instanceof Error ? error.message : 'Failed to change steps');
+      setStatus('error');
     }
   };
 
   const handleSetRecipe = (newRecipe: Recipe | null) => {
-    if (newRecipe && Array.isArray(newRecipe.recipe_steps) && newRecipe.recipe_steps.length > 0) {
-      setRecipe(newRecipe);
-      setCurrentStep(0);
-    } else {
-      console.error('Invalid recipe structure:', newRecipe);
-      setRecipe(null);
-    }
+    setRecipe(newRecipe);
+    setShowIngredients(false); // Reset to ready state
+    setCurrentStep(0);
+    setMessages([]);
+    setStatus('idle');
   };
 
   const handleUrlSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsProcessing(true);
     setError(null);
-    
+
     try {
-      const response = await fetch(process.env.NEXT_PUBLIC_MAKE_WEBHOOK_URL!, {
+      const response = await fetch('/api/parse-recipe', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
-        },
-        body: JSON.stringify({ url: recipeUrl })
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url: recipeUrl }),
       });
 
       if (!response.ok) {
-        throw new Error(`Failed to process recipe: ${response.statusText}`);
+        throw new Error('Failed to parse recipe');
       }
 
-      const data = await response.json();
+      const recipe = await response.json();
       
-      if (!data.recipeId) {
-        throw new Error('No recipe ID returned from processing');
-      }
-
-      // Fetch the new recipe
-      const { data: newRecipe, error: fetchError } = await supabase
+      // Store in Supabase
+      const { error: dbError } = await supabase
         .from('recipes')
-        .select(`
-          id,
-          title,
-          total_time,
-          source_url,
-          created_at,
-          recipe_ingredients (
-            recipe_id,
-            ingredient,
-            amount,
-            unit,
-            aisle
-          ),
-          recipe_steps (
-            recipe_id,
-            step_number,
-            instruction
-          )
-        `)
-        .eq('id', data.recipeId)
-        .single();
+        .upsert(recipe);
 
-      if (fetchError || !newRecipe) {
-        throw new Error(fetchError?.message || 'Failed to fetch new recipe');
+      if (dbError) {
+        throw new Error('Failed to save recipe');
       }
 
-      handleSetRecipe(newRecipe);
+      setRecipe(recipe);
+      setShowIngredients(false); // Reset to ready state
+      setCurrentStep(0);
+      setMessages([]);
       setRecipeUrl('');
-      
+      setIsProcessing(false);
+      setStatus('idle');
     } catch (error) {
-      console.error('Error:', error);
       setError(error instanceof Error ? error.message : 'An error occurred');
-    } finally {
       setIsProcessing(false);
     }
   };
@@ -315,7 +291,7 @@ export default function Home() {
         <LoadingState />
       </StateWrapper>
 
-      <StateWrapper isVisible={!!recipe && !isProcessing && !showIngredients}>
+      <StateWrapper isVisible={!!recipe && !isProcessing && !showIngredients && status === 'idle'}>
         <ReadyState
           recipe={recipe!}
           onStart={() => setShowIngredients(true)}
@@ -331,15 +307,16 @@ export default function Home() {
         />
       </StateWrapper>
 
-      <StateWrapper isVisible={!!recipe && showIngredients && status !== 'idle'}>
+      <StateWrapper isVisible={!!recipe && status !== 'idle'}>
         <StepState
           recipe={recipe!}
           currentStep={currentStep}
           messages={messages}
           isListening={isListening}
-          onPrevious={() => setCurrentStep(Math.max(0, currentStep - 1))}
-          onNext={() => setCurrentStep(Math.min(recipe!.recipe_steps.length - 1, currentStep + 1))}
-          onStop={stopConversation}
+          onPrevious={() => handleStepChange(Math.max(0, currentStep - 1))}
+          onNext={() => handleStepChange(Math.min(recipe!.recipe_steps.length - 1, currentStep + 1))}
+          onStop={toggleMicrophone}
+          isConversationActive={status === 'connected'}
         />
       </StateWrapper>
 

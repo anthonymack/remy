@@ -1251,11 +1251,24 @@ html, body {
 .nav-button--back {
   background-color: var(--color-surface);
 }
+.nav-button--back svg {
+  fill: var(--color-text);
+}
 .nav-button--next {
   background-color: var(--color-accent);
 }
+.nav-button--next svg {
+  fill: var(--color-background);
+}
 .nav-button--speak {
   background-color: var(--color-accent);
+}
+.nav-button--speak.active {
+  --tw-bg-opacity: 1;
+  background-color: rgb(239 68 68 / var(--tw-bg-opacity, 1));
+}
+.nav-button--speak svg {
+  fill: var(--color-background);
 }
 .nav-button svg {
   height: 2rem;
@@ -1264,13 +1277,6 @@ html, body {
 .nav-button svg.back-icon {
   --tw-rotate: 180deg;
   transform: translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y));
-  fill: var(--color-background);
-}
-.nav-button svg.next-icon {
-  fill: var(--color-background);
-}
-.nav-button svg.speak-icon {
-  fill: var(--color-background);
 }
 
 .progress-bar-container {

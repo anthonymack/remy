@@ -349,29 +349,37 @@ html, body {
 
   &--back {
     @apply bg-surface;
+    
+    svg {
+      @apply fill-text;
+    }
   }
 
   &--next {
     @apply bg-accent;
+    
+    svg {
+      @apply fill-background;
+    }
   }
 
   &--speak {
     @apply bg-accent;
+    
+    &.active {
+      @apply bg-red-500;
+    }
+    
+    svg {
+      @apply fill-background;
+    }
   }
 
   svg {
     @apply w-8 h-8;
 
     &.back-icon {
-      @apply fill-background rotate-180;
-    }
-
-    &.next-icon {
-      @apply fill-background;
-    }
-
-    &.speak-icon {
-      @apply fill-background;
+      @apply rotate-180;
     }
   }
 }
