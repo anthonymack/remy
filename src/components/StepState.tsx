@@ -1,5 +1,6 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { Recipe, Message } from '../types';
+import { useState } from 'react';
 
 interface StepStateProps {
   recipe: Recipe;
@@ -20,29 +21,46 @@ export const StepState = ({
   onNext,
   onStop,
 }: StepStateProps) => {
+  const [showIngredients, setShowIngredients] = useState(false);
   const step = recipe.recipe_steps[currentStep];
   const isFirstStep = currentStep === 0;
   const isLastStep = currentStep === recipe.recipe_steps.length - 1;
 
   return (
     <div className="page-container relative">
-      {/* Glow Effect */}
-      <div className={`glow-effect ${isListening ? 'active' : ''}`} />
-
       {/* Main Content */}
       <div className="max-w-xl mx-auto">
         {/* Header with gradient */}
         <div className="step-header">
-          <div className="progress-bar-container">
-            <div 
-              className="progress-bar-fill"
-              style={{ 
-                width: `${((currentStep + 1) / recipe.recipe_steps.length) * 100}%` 
-              }}
-            />
+          <div className="flex items-center justify-between">
+            <div className="progress-bar-container" style={{ width: 'calc(100% - 60px)' }}>
+              <div 
+                className="progress-bar-fill"
+                style={{ 
+                  width: `${((currentStep + 1) / recipe.recipe_steps.length) * 100}%` 
+                }}
+              />
+            </div>
+
+            {/* Ingredients Button - horizontally aligned with progress bar */}
+            <button 
+              onClick={() => setShowIngredients(true)}
+              className="w-10 h-10 bg-surface rounded-full 
+                text-text-secondary hover:text-text hover:bg-opacity-80 
+                transition-colors duration-200 flex items-center justify-center"
+            >
+              <svg 
+                className="w-5 h-5" 
+                xmlns="http://www.w3.org/2000/svg" 
+                viewBox="0 0 512 512"
+                fill="currentColor"
+              >
+                <path d="M64 144a48 48 0 1 0 0-96 48 48 0 1 0 0 96zM192 64c-17.7 0-32 14.3-32 32s14.3 32 32 32l288 0c17.7 0 32-14.3 32-32s-14.3-32-32-32L192 64zm0 160c-17.7 0-32 14.3-32 32s14.3 32 32 32l288 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-288 0zm0 160c-17.7 0-32 14.3-32 32s14.3 32 32 32l288 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-288 0zM64 464a48 48 0 1 0 0-96 48 48 0 1 0 0 96zm48-208a48 48 0 1 0 -96 0 48 48 0 1 0 96 0z"/>
+              </svg>
+            </button>
           </div>
 
-          <div className="mb-12">
+          <div className="mt-8">
             <p className="body-base mb-2">Step {currentStep + 1}</p>
             <h2 className="heading-lg">{step.instruction}</h2>
           </div>
@@ -101,6 +119,50 @@ export const StepState = ({
           </button>
         </div>
       </div>
+
+      {/* Modal - Updated with ingredients-state styling */}
+      {showIngredients && (
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <button 
+              onClick={() => setShowIngredients(false)}
+              className="modal-close"
+            >
+              ✕
+            </button>
+            
+            <div className="ingredients-state">
+              <div className="ingredients-content">
+                {Object.entries(recipe.recipe_ingredients.reduce((groups, ingredient) => {
+                  const aisle = ingredient.aisle || 'Other';
+                  if (!groups[aisle]) groups[aisle] = [];
+                  groups[aisle].push(ingredient);
+                  return groups;
+                }, {} as Record<string, typeof recipe.recipe_ingredients>)).map(([aisle, ingredients]) => (
+                  <div key={aisle} className="ingredient-group">
+                    <h3 className="heading-md mb-4">{aisle}</h3>
+                    <div className="ingredient-list">
+                      {ingredients.map((ingredient, index) => (
+                        <div key={index} className="ingredient-item">
+                          <span className="ingredient-amount">
+                            {ingredient.amount} {ingredient.unit}
+                          </span>
+                          <span className="ingredient-name">
+                            {ingredient.ingredient}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Glow Effect */}
+      <div className={`glow-effect ${isListening ? 'active' : ''}`} />
     </div>
   );
 }; 

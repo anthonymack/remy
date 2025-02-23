@@ -2,8 +2,20 @@
 @tailwind components;
 @tailwind utilities;
 
+html, body {
+  background-color: #F9F4EC;  // Match your app background
+  height: 100vh;
+  margin: 0;
+  padding: 0;
+}
+// If using Tailwind, ensure bg color is applied
+.bg-custom {
+  background-color: #F5EAD7;
+}
+
 @layer base {
   :root {
+    --theme-color: #F9F4EC;
     --color-background: #F9F4EC;
     --color-text: #3A2C23;
     --color-text-secondary: #92877D;
@@ -366,7 +378,7 @@
 
 // Progress bar
 .progress-bar-container {
-  @apply max-w-[240px] h-1 bg-surface rounded-full mx-auto mb-12 overflow-hidden;
+  @apply h-1 bg-surface rounded-full overflow-hidden;
 }
 
 .progress-bar-fill {
@@ -385,4 +397,18 @@
   to {
     transform: rotate(360deg);
   }
+}
+
+.modal-overlay {
+  @apply fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4;
+}
+
+.modal-content {
+  @apply bg-background rounded-2xl max-w-xl w-full max-h-[80vh] overflow-y-auto pt-8 relative;
+}
+
+.modal-close {
+  @apply absolute top-4 right-4 w-8 h-8 flex items-center justify-center 
+    rounded-full bg-surface text-text-secondary hover:text-text 
+    transition-colors duration-200;
 } 
