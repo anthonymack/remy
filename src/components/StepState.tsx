@@ -28,7 +28,7 @@ export const StepState = ({
   const isFirstStep = currentStep === 0;
   const isLastStep = currentStep === recipe.recipe_steps.length - 1;
   const [audioLevel, setAudioLevel] = useState(0);
-  const animationFrameRef = useRef<number>();
+  const animationFrameRef = useRef<number | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
   const mediaStreamRef = useRef<MediaStream | null>(null);
 

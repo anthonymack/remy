@@ -1,4 +1,6 @@
 {
+  "/api/parse-recipe/route": "app/api/parse-recipe/route.js",
+  "/favicon.ico/route": "app/favicon.ico/route.js",
   "/page": "app/page.js",
   "/styleguide/page": "app/styleguide/page.js"
 }

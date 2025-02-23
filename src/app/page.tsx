@@ -230,6 +230,7 @@ export default function Home() {
     setError(null);
 
     try {
+      // Send URL to Make
       const response = await fetch('/api/parse-recipe', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -237,28 +238,50 @@ export default function Home() {
       });
 
       if (!response.ok) {
-        throw new Error('Failed to parse recipe');
+        throw new Error('Failed to send recipe to parser');
       }
 
-      const recipe = await response.json();
-      
-      // Store in Supabase
-      const { error: dbError } = await supabase
+      // Wait a moment for Make to process and insert into Supabase
+      await new Promise(resolve => setTimeout(resolve, 2000));
+
+      // Fetch the newly parsed recipe from Supabase
+      const { data, error } = await supabase
         .from('recipes')
-        .upsert(recipe);
+        .select(`
+          id,
+          title,
+          total_time,
+          source_url,
+          created_at,
+          recipe_ingredients (
+            recipe_id,
+            ingredient,
+            amount,
+            unit,
+            aisle
+          ),
+          recipe_steps (
+            recipe_id,
+            step_number,
+            instruction
+          )
+        `)
+        .eq('source_url', recipeUrl)
+        .single();
 
-      if (dbError) {
-        throw new Error('Failed to save recipe');
+      if (error || !data) {
+        throw new Error('Recipe not found');
       }
 
-      setRecipe(recipe);
-      setShowIngredients(false); // Reset to ready state
+      setRecipe(data);
+      setShowIngredients(false);
       setCurrentStep(0);
       setMessages([]);
       setRecipeUrl('');
       setIsProcessing(false);
       setStatus('idle');
     } catch (error) {
+      console.error('Error:', error);
       setError(error instanceof Error ? error.message : 'An error occurred');
       setIsProcessing(false);
     }

@@ -23,7 +23,7 @@ export const InitialState = ({
 
   return (
     <div className="centered-content text-center">
-      <div className="w-full relative">
+      <div className="w-90 relative">
         <h1 className="heading-logo">Rémy</h1>
         <p className="body-lg mb-12">What are we cooking today?</p>
 
@@ -41,7 +41,7 @@ export const InitialState = ({
             <div className="flex items-center justify-center gap-4">
               <button 
                 type="submit"
-                disabled={isProcessing || !recipeUrl}
+                disabled={isProcessing}
                 className="button button-primary"
               >
                 Start cooking

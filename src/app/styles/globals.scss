@@ -68,8 +68,13 @@ html, body {
   }
 
   .input-url {
-    @apply w-full p-4 bg-surface rounded-full border-2
-      focus:border-accent focus:outline-none transition-colors;
+    @apply w-full p-4 bg-surface rounded-full text-center font-sans
+      focus:border-border focus:outline-none transition-colors;
+    
+    &::placeholder {
+      @apply text-text;
+      opacity: 0.5;
+    }
   }
 
   .button {

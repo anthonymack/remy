@@ -16,6 +16,11 @@
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/styleguide/page.js"
+    ],
+    "/api/parse-recipe/route": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/api/parse-recipe/route.js"
     ]
   }
 }
