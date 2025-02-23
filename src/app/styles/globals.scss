@@ -371,4 +371,18 @@
 
 .progress-bar-fill {
   @apply h-full bg-accent transition-all duration-300 ease-out;
+}
+
+.loading-spinner {
+  @apply w-16 h-16 border-4 border-accent border-t-transparent rounded-full;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 } 

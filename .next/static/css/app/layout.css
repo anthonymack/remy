@@ -1259,6 +1259,25 @@ video {
   transition-timing-function: cubic-bezier(0, 0, 0.2, 1);
 }
 
+.loading-spinner {
+  height: 4rem;
+  width: 4rem;
+  border-radius: 9999px;
+  border-width: 4px;
+  border-color: var(--color-accent);
+  border-top-color: transparent;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 .hover\:text-text:hover {
   color: var(--color-text);
 }
