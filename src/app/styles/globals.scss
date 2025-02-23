@@ -198,7 +198,9 @@ html, body {
   }
 
   .action-bar {
-    @apply fixed bottom-8 left-0 right-0 px-8 flex items-center;
+    @apply fixed bottom-0 left-0 right-0 pb-8 px-8 flex items-center;
+    background: linear-gradient(to top, var(--color-background) 60%, transparent);
+    padding-top: 4rem;
     
     // For 2 buttons (ReadyState)
     &:has(.nav-button:nth-child(2):last-child) {

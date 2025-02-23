@@ -8,7 +8,7 @@ interface ReadyStateProps {
 
 export const ReadyState = ({ recipe, onStart, onBack }: ReadyStateProps) => {
   return (
-    <div className="centered-content text-center min-h-screen flex flex-col">
+    <div className="centered-content text-center min-h-screen flex flex-col w-80">
       <div className="flex-1 flex flex-col justify-center">
         <h1 className="heading-xxl mb-4">{recipe.title}</h1>
         

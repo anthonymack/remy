@@ -806,13 +806,16 @@ video {
 }
 .action-bar {
   position: fixed;
-  bottom: 2rem;
+  bottom: 0px;
   left: 0px;
   right: 0px;
   display: flex;
   align-items: center;
   padding-left: 2rem;
   padding-right: 2rem;
+  padding-bottom: 2rem;
+    background: linear-gradient(to top, var(--color-background) 60%, transparent);
+    padding-top: 4rem;
 }
 .action-bar:has(.nav-button:nth-child(2):last-child) {
   justify-content: space-between;
@@ -866,6 +869,9 @@ video {
 .mb-2 {
   margin-bottom: 0.5rem;
 }
+.mb-24 {
+  margin-bottom: 6rem;
+}
 .mb-4 {
   margin-bottom: 1rem;
 }
@@ -913,6 +919,9 @@ video {
 }
 .w-6 {
   width: 1.5rem;
+}
+.w-80 {
+  width: 20rem;
 }
 .w-full {
   width: 100%;

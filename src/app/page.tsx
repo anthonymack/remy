@@ -267,10 +267,17 @@ export default function Home() {
           )
         `)
         .eq('source_url', recipeUrl)
+        .order('created_at', { ascending: false })
+        .limit(1)
         .single();
 
-      if (error || !data) {
+      if (error) {
+        console.error('Supabase error:', error);
         throw new Error('Recipe not found');
+      }
+
+      if (!data) {
+        throw new Error('No recipe data returned');
       }
 
       setRecipe(data);

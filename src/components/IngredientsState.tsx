@@ -24,7 +24,7 @@ export function IngredientsState({ recipe, onStart, onBack }: IngredientsStatePr
       animate={{ opacity: 1, y: 0 }}
       className="ingredients-state"
     >
-      <div className="ingredients-content">
+      <div className="ingredients-content mb-24">
         <h2 className="heading-step">Gather your ingredients</h2>
         <h3 className="heading-xl mb-8">{recipe.title}</h3>
 
