@@ -78,7 +78,12 @@ html, body {
   }
 
   .button-primary {
-    @apply bg-accent text-surface hover:bg-opacity-90;
+    @apply bg-accent text-background hover:bg-opacity-90 font-sans font-semibold;
+  }
+
+  .button-surface {
+    @apply bg-surface text-text-secondary hover:text-text hover:bg-opacity-80 
+      font-sans font-semibold;
   }
 
   .button-secondary {
@@ -188,6 +193,10 @@ html, body {
   }
 
   // Update action bar styles
+  .nav-bar {
+    @apply fixed bottom-8 left-0 right-0 px-8 flex justify-center items-center;
+  }
+  
   .action-bar {
     @apply fixed bottom-8 left-0 right-0 px-8 flex justify-between items-center;
     
@@ -375,6 +384,14 @@ html, body {
     }
   }
 
+  &--surface {
+    @apply bg-surface;
+    
+    svg {
+      @apply fill-text;
+    }
+  }
+
   svg {
     @apply w-8 h-8;
 
@@ -419,4 +436,16 @@ html, body {
   @apply absolute top-4 right-4 w-8 h-8 flex items-center justify-center 
     rounded-full bg-surface text-text-secondary hover:text-text 
     transition-colors duration-200;
+}
+
+.nav-bar {
+  @apply fixed bottom-8 left-0 right-0 px-8 flex justify-center items-center;
+  
+  .nav-button--next {
+    @apply relative z-10;
+  }
+  
+  .nav-button--surface {
+    @apply absolute right-8;
+  }
 } 

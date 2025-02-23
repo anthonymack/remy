@@ -9,13 +9,6 @@ interface ReadyStateProps {
 export const ReadyState = ({ recipe, onStart, onBack }: ReadyStateProps) => {
   return (
     <div className="centered-content text-center">
-      <button 
-        onClick={onBack}
-        className="absolute top-8 left-8 text-text-secondary hover:text-text"
-      >
-        ← Back
-      </button>
-
       <h1 className="heading-xxl mb-4">{recipe.title}</h1>
       
       <div className="flex items-center gap-4 mb-12">
@@ -43,7 +36,6 @@ export const ReadyState = ({ recipe, onStart, onBack }: ReadyStateProps) => {
           </svg>
         </button>
       </div>
-
     </div>
   );
 } 
